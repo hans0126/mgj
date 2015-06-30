@@ -4,18 +4,20 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.use(express.static(__dirname));
 
+app.use(express.static(__dirname+'/'));
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res){
   res.sendfile('index.html');
 });
+/*
 
-app.get('/game', function(req, res){
-  //res.sendfile('index.html');  
-  res.render('index',{ title: 'The index page!' });
+app.get('/joystick', function(req, res){
+  res.sendfile('joystick.html');  
+ // res.render('index',{ title: 'The index page!' });
 });
+*/
 
 
 http.listen(3000, function(){
@@ -25,8 +27,9 @@ http.listen(3000, function(){
 io.on('connection', function(socket){
   console.log('a user connected');
 
-  socket.on('chat',function(msg){
-  	io.emit('chat2','bbb');
+  socket.on('update',function(msg){
+  	//io.emit('chat2','bbb');
+  	io.emit('update sprite',msg);
 
   })
 
