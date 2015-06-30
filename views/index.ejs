@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+
+<body>  
+
+     <%= title %>
+    <script src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script>
+    	 var socket = io();
+
+    	 socket.emit("chat","Hi");
+
+    	 socket.on("chat2",function(msg){
+    	 	console.log(msg);
+    	 });
+
+    </script>
+</body>
+
+</html>
