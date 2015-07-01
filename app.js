@@ -5,6 +5,9 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 
+var playerList = [];
+
+
 app.use(express.static(__dirname+'/'));
 app.set('view engine', 'ejs');
 
@@ -25,7 +28,15 @@ http.listen(3000, function(){
 });
 
 io.on('connection', function(socket){
-  console.log('a user connected');
+  console.log('a user connected');  
+
+  socket.on('register',function(msg){
+    //io.emit('chat2','bbb');
+   // io.emit('update sprite',msg);
+     playerList.push(msg.id);    
+     io.emit('addNewPlayer',msg.id);
+
+  })
 
   socket.on('update',function(msg){
   	//io.emit('chat2','bbb');

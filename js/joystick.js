@@ -12,8 +12,7 @@ requirejs.config({
     }
 })
 
-
-requirejs(['init', 'jquery', 'pixi', 'TweenMax', 'EasePack', 'meter'], function(init) {
+requirejs(['init', 'io', 'jquery', 'pixi', 'TweenMax', 'EasePack', 'meter'], function(init, io) {
 
     PIXI.Container.prototype.updateLayersOrder = function() {
         this.children.sort(function(a, b) {
@@ -41,15 +40,37 @@ requirejs(['init', 'jquery', 'pixi', 'TweenMax', 'EasePack', 'meter'], function(
             }
         }
     });
-    init.init();
-    /* loader = new PIXI.loaders.Loader();
-     loader.on("complete", complete);
-     loader.load();
 
-     function complete(loader, re) {
-         resource = re;        
-     }
-     */
+
+
+    loader = new PIXI.loaders.Loader();
+    loader.add("joystick", "images/joystick.json");
+    loader.on("complete", complete);
+    loader.load();
+
+    function complete(loader, re) {
+        resource = re;
+        // init.init();
+
+        $('#joinBtn').on('click', joinGame);
+
+
+        function joinGame() {
+            currentId = Math.floor(Math.random() * 1000) + "_" + Math.floor(Math.random() * 1000);
+            window.localStorage['id'] = currentId;
+
+            var socket = io();
+
+            socket.emit('register', {
+                id: currentId
+            });
+
+            $(this).hide();
+            init.init();
+
+        };
+    }
+
 
 
 })

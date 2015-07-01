@@ -1,9 +1,156 @@
 define(['app/keyboard', 'io'], function(kb, io) {
     var socket = io();
+
     function init() {
 
-        var socket = io();
+        /*stats = new Stats();
+        stats.setMode(0); // 0: fps, 1: ms
 
+        // align top-left
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.right = '0px';
+        stats.domElement.style.top = '0px';
+
+        document.body.appendChild(stats.domElement);
+*/
+        displayWidth = window.innerWidth;
+        displayHeight = window.innerHeight;
+
+        stage = new PIXI.Container();
+
+        //需要劃一個area 做touch area
+        stage.hitArea = new PIXI.Rectangle(0, 0, displayWidth, displayHeight);
+
+        stage.interactive = true;
+        stage.buttonMode = true;
+
+
+        renderer = PIXI.autoDetectRenderer(displayWidth, displayHeight, {
+            backgroundColor: 0xFFFFFF
+        });
+
+        document.getElementById("gameView").appendChild(renderer.view);
+
+        var joystick = new PIXI.Sprite.fromFrame('joystick_base.png');
+
+        var stick = new PIXI.Sprite.fromFrame('joystick.png');
+
+        /*stick.anchor.x = 0.5;
+        stick.anchor.y = 0.5;*/
+
+        joystick.anchor.x = 0.5;
+        joystick.anchor.y = 0.5;
+        stick.anchor.x = 0.5;
+        stick.anchor.y = 0.5;
+
+        joystick.addChild(stick);
+        stage.addChild(joystick);
+
+
+        joystick.x = joystick.width / 2 + 100;
+        joystick.y = joystick.height / 2 + 100;
+
+        /*stick.x = joystick.width / 2 - stick.width / 2;
+        stick.y = joystick.height / 2 - stick.height / 2;*/
+        joystick.visible = false
+        stick.interactive = true;
+        stick.buttonMode = true;
+
+
+        stage.on('mousedown', showJoystick)
+            .on('touchstart', showJoystick)
+            .on('mouseup', hideJoystick)
+            .on('mouseupoutside', hideJoystick)
+            .on('touchend', hideJoystick)
+            .on('touchendoutside', hideJoystick)
+            .on('mousemove', joystickMove)
+            .on('touchmove', joystickMove);
+
+
+        function showJoystick(event) {
+            var _tp = event.data.getLocalPosition(this);
+            joystick.visible = true;
+            joystick.x = _tp.x;
+            joystick.y = _tp.y;
+
+            //onDragStart.call(stick, event);
+            stick.data = event.data;
+            //this.alpha = 0.5;
+            stick.dragging = true;
+            stick.sx = stick.data.getLocalPosition(this).x * stick.scale.x;
+            stick.sy = stick.data.getLocalPosition(this).y * stick.scale.y;
+            stick.lastMove = {
+                x: 0,
+                y: 0
+            };
+        }
+
+        function hideJoystick() {
+            joystick.visible = false;
+            stick.dragging = false;
+            // set the interaction data to null
+            stick.data = null;
+            stick.x = 0;
+            stick.y = 0;
+            stick.lastMove = {
+                x: 0,
+                y: 0
+            };
+            socketEmit(0, 0);
+        }
+
+        function joystickMove() {
+            if (stick.dragging) {
+                var newPosition = stick.data.getLocalPosition(this),
+                    _px = newPosition.x - stick.sx,
+                    _py = newPosition.y - stick.sy,
+                    _returnPostion = {
+                        x: 0,
+                        y: 0
+                    };
+
+                console.log(newPosition);
+
+                if (newPosition.x - joystick.x < stick.parent.width / 2 &&
+                    newPosition.x - joystick.x > (stick.parent.width / 2) * -1) {
+                    stick.position.x = _px;
+                }
+
+                if (newPosition.y - joystick.y < stick.parent.height / 2 &&
+                    newPosition.y - joystick.y > (stick.parent.height / 2) * -1) {
+                    stick.position.y = _py;
+                }
+
+                console.log("x:%s,y:%s", stick.position.x, stick.position.y);
+
+                if (Math.abs(stick.position.x) > 10) {
+                    if (stick.position.x > 0) {
+                        _returnPostion.x = 5;
+                    } else {
+                        _returnPostion.x = -5;
+                    }
+                }
+
+                if (Math.abs(stick.position.y) > 10) {
+                    if (stick.position.y > 0) {
+                        _returnPostion.y = 5;
+                    } else {
+                        _returnPostion.y = -5;
+                    }
+                }
+
+                if (stick.lastMove != _returnPostion) {
+                    socketEmit(_returnPostion.x, _returnPostion.y);
+                }
+
+                stick.lastMove = {
+                    x: _returnPostion.x,
+                    y: _returnPostion.y
+                };
+            }
+        }
+
+        var socket = io();
 
         var left = kb.keyboard(37),
             up = kb.keyboard(38),
@@ -12,69 +159,57 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         //Left arrow key `press` method
         left.press = function() {
-            //Change the playerRole's velocity when the key is pressed
-            // playerRole.vx = -5;
-            // playerRole.vy = 0;
-           // console.log("A");
-           socketEmit(-5,0);
+            socketEmit(-5, 0);
         };
 
         //Left arrow key `release` method
         left.release = function() {
-
-            //If the left arrow has been released, and the right arrow isn't down,
-            //and the playerRole isn't moving vertically:
-            //Stop the playerRole
-            
             if (!right.isDown) {
-               socketEmit(0,0);
+                socketEmit(0, 0);
             }
-
-
         };
 
         //Up
-        up.press = function() {         
-             socketEmit(0,-5);
+        up.press = function() {
+            socketEmit(0, -5);
         };
         up.release = function() {
-             if (!down.isDown) {
-               socketEmit(0,0);
-             }
+            if (!down.isDown) {
+                socketEmit(0, 0);
+            }
         };
 
         //Right
-        right.press = function() {        
-
-             socketEmit(5,0);
+        right.press = function() {
+            socketEmit(5, 0);
         };
         right.release = function() {
             if (!left.isDown) {
-                socketEmit(0,0);
+                socketEmit(0, 0);
             }
         };
 
         //Down
         down.press = function() {
-             socketEmit(0,5);
+            socketEmit(0, 5);
         };
         down.release = function() {
-             if (!up.isDown) {
-                 socketEmit(0,0);
-             }
+            if (!up.isDown) {
+                socketEmit(0, 0);
+            }
         };
 
         //Set the game state
 
-
+        animate();
 
     }
 
     function animate() {
-        stats.begin();
+       // stats.begin();
         renderer.render(stage);
-        state();
-        stats.end();
+        // state();
+       // stats.end();
         requestAnimFrame(animate);
     }
 
@@ -82,7 +217,8 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         socket.emit('update', {
             x: _x,
-            y: _y
+            y: _y,
+            id:currentId
         });
     }
 

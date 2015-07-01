@@ -1,9 +1,9 @@
 define(['app/keyboard', 'io'], function(kb, io) {
     socket = io();
 
+    playerList = [];
+
     function init() {
-
-
 
 
         stats = new Stats();
@@ -28,37 +28,79 @@ define(['app/keyboard', 'io'], function(kb, io) {
         document.getElementById("gameView").appendChild(renderer.view);
 
 
+
+        socket.on('addNewPlayer', function(msg) {
+
+            console.log(msg);
+
+            var r = parseInt(Math.random() * 254);
+            var g = parseInt(Math.random() * 254);
+            var b = parseInt(Math.random() * 254);
+            //转换为十六进制,使用 int.toString(16)即可.
+            //相应的，还可以使用toString(10) , toString(8), toString(2)来转化为十进制，八进制，二进制等。
+            r = r.toString(16);
+            g = g.toString(16);
+            b = b.toString(16);
+            //拼接成颜色的RGB值
+            var color = '0x' + r + g + b;
+
+
+            var playerRole = new PIXI.Graphics();
+            playerRole.vx = 0;
+            playerRole.vy = 0;
+
+            playerRole.beginFill(color);
+            playerRole.drawCircle(0, 0, 25);
+
+            playerLayer.addChild(playerRole);
+
+            playerList[msg] = playerRole;
+
+        })
+
+
         var playerLayer = new PIXI.Container();
 
         stage.addChild(playerLayer);
 
 
-        var playerRole = new PIXI.Graphics();
-        playerRole.vx = 0;
-        playerRole.vy = 0;
 
-        playerRole.beginFill(0xFF0000);
-        playerRole.drawCircle(50, 50, 25);
-
-
-        playerLayer.addChild(playerRole);
 
         socket.on('update sprite', function(msg) {
-            console.log(msg);
-
-            playerRole.vx = msg.x;
-            playerRole.vy = msg.y;
+            //console.log(msg);
+            playerList[msg.id].vx = msg.x;
+            playerList[msg.id].vy = msg.y;
         });
 
 
-       
+
         //Set the game state
         state = play;
 
         function play() {
             //Use the playerRole's velocity to make it move
-            playerRole.x += playerRole.vx;
-            playerRole.y += playerRole.vy
+            for (var i = 0; i < playerLayer.children.length; i++) {
+                var _currentPlayer = playerLayer.children[i];
+
+                _currentPlayer.x += _currentPlayer.vx;
+                _currentPlayer.y += _currentPlayer.vy;
+
+                if (_currentPlayer.x > displayWidth) {
+                    _currentPlayer.x = displayWidth;
+                }
+
+                if (_currentPlayer.x < 0) {
+                    _currentPlayer.x = 0;
+                }
+
+                if (_currentPlayer.y > displayHeight) {
+                    _currentPlayer.y = displayHeight;
+                }
+
+                if (_currentPlayer.y < 0) {
+                    _currentPlayer.y = 0;
+                }
+            }
         }
 
         animate();
