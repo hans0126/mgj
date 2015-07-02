@@ -3,7 +3,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
     function init() {
 
-        /*stats = new Stats();
+        stats = new Stats();
         stats.setMode(0); // 0: fps, 1: ms
 
         // align top-left
@@ -12,17 +12,33 @@ define(['app/keyboard', 'io'], function(kb, io) {
         stats.domElement.style.top = '0px';
 
         document.body.appendChild(stats.domElement);
-*/
+
         displayWidth = window.innerWidth;
         displayHeight = window.innerHeight;
 
         stage = new PIXI.Container();
 
-        //需要劃一個area 做touch area
-        stage.hitArea = new PIXI.Rectangle(0, 0, displayWidth, displayHeight);
+        var joyStickLayer = new PIXI.Container();
+        var buttonLayer = new PIXI.Container();
 
-        stage.interactive = true;
-        stage.buttonMode = true;
+        buttonLayer.x = displayWidth / 2;
+
+
+        var shoot = createButton();
+        shoot.interactive = true;
+        shoot.buttonMode = true;
+
+        shoot.on('mousedown', _shooting)
+            .on('touchstart', _shooting);
+
+        shoot.x = displayWidth / 4;
+        shoot.y = displayHeight / 2;
+
+        //需要劃一個area 做touch area
+        joyStickLayer.hitArea = new PIXI.Rectangle(0, 0, displayWidth / 2, displayHeight);
+
+        joyStickLayer.interactive = true;
+        joyStickLayer.buttonMode = true;
 
 
         renderer = PIXI.autoDetectRenderer(displayWidth, displayHeight, {
@@ -35,6 +51,12 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         var stick = new PIXI.Sprite.fromFrame('joystick.png');
 
+        var score = createScore();
+
+
+
+
+
         /*stick.anchor.x = 0.5;
         stick.anchor.y = 0.5;*/
 
@@ -44,7 +66,9 @@ define(['app/keyboard', 'io'], function(kb, io) {
         stick.anchor.y = 0.5;
 
         joystick.addChild(stick);
-        stage.addChild(joystick);
+        joyStickLayer.addChild(joystick)
+        stage.addChild(joyStickLayer);
+        stage.addChild(buttonLayer);
 
 
         joystick.x = joystick.width / 2 + 100;
@@ -57,7 +81,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
         stick.buttonMode = true;
 
 
-        stage.on('mousedown', showJoystick)
+        joyStickLayer.on('mousedown', showJoystick)
             .on('touchstart', showJoystick)
             .on('mouseup', hideJoystick)
             .on('mouseupoutside', hideJoystick)
@@ -65,6 +89,8 @@ define(['app/keyboard', 'io'], function(kb, io) {
             .on('touchendoutside', hideJoystick)
             .on('mousemove', joystickMove)
             .on('touchmove', joystickMove);
+
+
 
 
         function showJoystick(event) {
@@ -109,7 +135,6 @@ define(['app/keyboard', 'io'], function(kb, io) {
                         y: 0
                     };
 
-                console.log(newPosition);
 
                 if (newPosition.x - joystick.x < stick.parent.width / 2 &&
                     newPosition.x - joystick.x > (stick.parent.width / 2) * -1) {
@@ -121,7 +146,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
                     stick.position.y = _py;
                 }
 
-                console.log("x:%s,y:%s", stick.position.x, stick.position.y);
+                // console.log("x:%s,y:%s", stick.position.x, stick.position.y);
 
                 if (Math.abs(stick.position.x) > 10) {
                     if (stick.position.x > 0) {
@@ -150,7 +175,17 @@ define(['app/keyboard', 'io'], function(kb, io) {
             }
         }
 
+        function _shooting() {
+            socket.emit('shooting',currentId);
+        }
+
         var socket = io();
+
+        socket.on('get score', function(msg) {
+            if (msg.id == currentId) {
+                score.text = msg.score;
+            }
+        })
 
         var left = kb.keyboard(37),
             up = kb.keyboard(38),
@@ -203,13 +238,42 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         animate();
 
+        function createButton() {
+            var _btn = new PIXI.Graphics();
+            _btn.beginFill(0x999999);
+            _btn.drawCircle(0, 0, 100);
+
+            buttonLayer.addChild(_btn);
+            return _btn;
+        }
+
+        function createScore() {
+            var _scoreLayer = new PIXI.Container();
+            var _sTitle = new PIXI.Text("score:", {
+                font: '50px Arial',
+                fill: 0xaaaaaa
+            });
+            var _score = new PIXI.Text("0", {
+                font: '50px Arial',
+                fill: 0x333333
+            });
+            _scoreLayer.addChild(_sTitle);
+            _scoreLayer.addChild(_score);
+            _score.x = _sTitle.width + 10;
+            stage.addChild(_scoreLayer);
+
+            _scoreLayer.x = displayWidth / 2;
+
+            return _score;
+        }
+
     }
 
     function animate() {
-       // stats.begin();
+        stats.begin();
         renderer.render(stage);
         // state();
-       // stats.end();
+        stats.end();
         requestAnimFrame(animate);
     }
 
@@ -218,7 +282,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
         socket.emit('update', {
             x: _x,
             y: _y,
-            id:currentId
+            id: currentId
         });
     }
 
