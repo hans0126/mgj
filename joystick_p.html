@@ -28,6 +28,7 @@
         });
 
         $(this).hide();
+        // launchIntoFullscreen(document.documentElement);
         init();
 
     };
@@ -40,9 +41,6 @@
             update: update
         });
 
-        // game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
-        //Phaser.ScaleManager.EXACT_FIT;
-
         var result = 'Drag a sprite';
         var stick;
         var onEnterEvent;
@@ -54,6 +52,8 @@
 
         function create() {
 
+            game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+            game.scale.startFullScreen(false);
             var joystick = game.add.group();
             joystick.x = 200;
             joystick.y = game.world.centerY;
@@ -80,7 +80,7 @@
 
             var button = game.add.button(600, game.world.centerY, 'joystick', actionOnClick, 'joystick.png');
 
-              button.anchor.set(0.5);
+            button.anchor.set(0.5);
             //  button.events.onInputOver.add(isTouchingButton,this);
             //   button.input.enableDrag(true);
             /*  var btn = game.add.sprite(0, 0, 'joystick', 'joystick.png');
@@ -104,6 +104,9 @@
             score = game.add.text(game.world.centerX, 50, "score:0", style);
 
             score.anchor.set(0.5);
+
+            game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
 
         }
@@ -188,6 +191,19 @@
                 y: _y,
                 id: currentId
             });
+        }
+    }
+
+    function launchIntoFullscreen(element) {
+
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
         }
     }
     </script>
