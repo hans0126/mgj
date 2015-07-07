@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>test</title>
+    <link rel="stylesheet" href="css/joystick.css">
+</head>
+
+<body>
+    <div>
+        <a href="#" id="joinBtn">JOIN</a>
+    </div>
+    <script src="js/lib/phaser.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script>
+    $('#joinBtn').on('click', joinGame);
+    var currentId;
+    var socket = io.connect();
+    var score;
+
+    function joinGame() {
+        currentId = Math.floor(Math.random() * 1000) + "_" + Math.floor(Math.random() * 1000);
+        window.localStorage['id'] = currentId;
+        socket.emit('register', {
+            id: currentId
+        });
+
+        $(this).hide();
+        init();
+
+    };
+
+
+    function init() {
+        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
+            preload: preload,
+            create: create,
+            update: update
+        });
+
+        // game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+        //Phaser.ScaleManager.EXACT_FIT;
+
+        var result = 'Drag a sprite';
+        var stick;
+        var onEnterEvent;
+
+        function preload() {
+            game.load.atlasJSONHash('joystick', 'images/joystick_phaser.png', 'images/joystick_phaser.json');
+
+        }
+
+        function create() {
+
+            var joystick = game.add.group();
+            joystick.x = 200;
+            joystick.y = game.world.centerY;
+            var joystickBg = game.add.sprite(0, 0, 'joystick', 'joystick_base.png');
+            joystickBg.anchor.set(0.5);
+
+            //game.add.sprite(0,0,'bunny');
+            stick = game.add.sprite(0, 0, 'joystick', 'joystick.png');
+            stick.anchor.set(0.5);
+            stick.lastMove = {
+                x: 0,
+                y: 0
+            };
+
+            joystick.add(joystickBg);
+            joystick.add(stick);
+            //  aa.frameName  = '';
+            /* aa.animations.add('walk', ['joystick.png', 'joystick_base.png'], 10, true, false);
+             aa.animations.play('walk');*/
+            stick.inputEnabled = true;
+            stick.input.enableDrag(true);
+            stick.events.onDragStart.add(onDragStart, this);
+            stick.events.onDragStop.add(onDragStop, this);
+
+            var button = game.add.button(600, game.world.centerY, 'joystick', actionOnClick, 'joystick.png');
+
+              button.anchor.set(0.5);
+            //  button.events.onInputOver.add(isTouchingButton,this);
+            //   button.input.enableDrag(true);
+            /*  var btn = game.add.sprite(0, 0, 'joystick', 'joystick.png');
+              btn.anchor.set(0.5);
+
+              btn.x = 600;
+              btn.y = 200;*/
+
+            //game.input.onDown.add(btnClick, this);
+            //console.log(aa);
+
+            stick.input.boundsRect = new Phaser.Rectangle(300 / -2, 300 / -2, 300, 300);
+
+
+            var style = {
+                font: "65px Arial",
+                fill: "#ffffff",
+                align: "center"
+            };
+
+            score = game.add.text(game.world.centerX, 50, "score:0", style);
+
+            score.anchor.set(0.5);
+
+
+        }
+
+        function actionOnClick(pointer) {
+            socket.emit('shooting', currentId);
+            socket.on('get score', function(msg) {
+                if (msg.id == currentId) {
+                    score.text = "score:" + msg.score;
+                }
+            })
+        }
+
+
+        function onDragStart(sprite, pointer) {
+            //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
+        }
+
+        function onDragStop(sprite, pointer) {
+            //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
+            sprite.x = 0;
+            sprite.y = 0;
+            stick.lastMove = {
+                x: 0,
+                y: 0
+            };
+            socketEmit(0, 0);
+        }
+
+        onEnterEvent = function() {
+
+            if (stick.game.input.activePointer.isDown) {
+                var _returnPostion = {
+                    x: 0,
+                    y: 0
+                };
+
+                result = "x:" + stick.x + ",y:" + stick.y;
+                if (Math.abs(stick.x) > 30) {
+                    if (stick.x > 0) {
+                        _returnPostion.x = 5;
+                    } else {
+                        _returnPostion.x = -5;
+                    }
+                }
+
+                if (Math.abs(stick.y) > 30) {
+                    if (stick.y > 0) {
+                        _returnPostion.y = 5;
+                    } else {
+                        _returnPostion.y = -5;
+                    }
+                }
+
+                if (stick.lastMove != _returnPostion) {
+                    socketEmit(_returnPostion.x, _returnPostion.y);
+                    result = "x:" + _returnPostion.x + ",y:" + _returnPostion.y;
+                }
+
+                stick.lastMove = {
+                    x: _returnPostion.x,
+                    y: _returnPostion.y
+                };
+
+
+            }
+
+        }
+
+        function update() {
+            //result ="x:"+aa.x+",y:"+aa.y;
+            game.debug.text(result, 10, 20);
+            //
+            onEnterEvent();
+        }
+
+
+        function socketEmit(_x, _y) {
+
+            socket.emit('update', {
+                x: _x,
+                y: _y,
+                id: currentId
+            });
+        }
+    }
+    </script>
+</body>
+
+</html>

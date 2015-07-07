@@ -1,9 +1,11 @@
-var core = require('../core');
+var core = require('../core'),
+    tempPoint = new core.Point(),
+    tempPolygon = new core.Polygon();
 
 /**
  * Base mesh class
  * @class
- * @extends Container
+ * @extends PIXI.Container
  * @memberof PIXI.mesh
  * @param texture {Texture} The texture to use
  * @param [vertices] {Float32Arrif you want to specify the vertices
@@ -19,8 +21,9 @@ function Mesh(texture, vertices, uvs, indices, drawMode)
      * The texture of the Mesh
      *
      * @member {Texture}
+     * @private
      */
-    this.texture = texture;
+    this._texture = null;
 
     /**
      * The Uvs of the Mesh
@@ -28,9 +31,9 @@ function Mesh(texture, vertices, uvs, indices, drawMode)
      * @member {Float32Array}
      */
     this.uvs = uvs || new Float32Array([0, 1,
-                                 1, 1,
-                                 1, 0,
-                                 0, 1]);
+        1, 1,
+        1, 0,
+        0, 1]);
 
     /**
      * An array of vertices
@@ -38,9 +41,9 @@ function Mesh(texture, vertices, uvs, indices, drawMode)
      * @member {Float32Array}
      */
     this.vertices = vertices || new Float32Array([0, 0,
-                                      100, 0,
-                                      100, 100,
-                                      0, 100]);
+        100, 0,
+        100, 100,
+        0, 100]);
 
     /*
      * @member {Uint16Array} An array containing the indices of the vertices
@@ -76,12 +79,52 @@ function Mesh(texture, vertices, uvs, indices, drawMode)
      * @member {number}
      */
     this.drawMode = drawMode || Mesh.DRAW_MODES.TRIANGLE_MESH;
+
+    // run texture setter;
+    this.texture = texture;
 }
 
 // constructor
 Mesh.prototype = Object.create(core.Container.prototype);
 Mesh.prototype.constructor = Mesh;
 module.exports = Mesh;
+
+Object.defineProperties(Mesh.prototype, {
+    /**
+     * The texture that the sprite is using
+     *
+     * @member {PIXI.Texture}
+     * @memberof PIXI.mesh.Mesh#
+     */
+    texture: {
+        get: function ()
+        {
+            return  this._texture;
+        },
+        set: function (value)
+        {
+            if (this._texture === value)
+            {
+                return;
+            }
+
+            this._texture = value;
+
+            if (value)
+            {
+                // wait for the texture to load
+                if (value.baseTexture.hasLoaded)
+                {
+                    this._onTextureUpdate();
+                }
+                else
+                {
+                    value.once('update', this._onTextureUpdate, this);
+                }
+            }
+        }
+    }
+});
 
 /**
  * Renders the object using the WebGL renderer
@@ -186,9 +229,9 @@ Mesh.prototype._renderCanvasTriangles = function (context)
  */
 Mesh.prototype._renderCanvasDrawTriangle = function (context, vertices, uvs, index0, index1, index2)
 {
-    var textureSource = this.texture.baseTexture.source;
-    var textureWidth = this.texture.width;
-    var textureHeight = this.texture.height;
+    var textureSource = this._texture.baseTexture.source;
+    var textureWidth = this._texture.baseTexture.width;
+    var textureHeight = this._texture.baseTexture.height;
 
     var x0 = vertices[index0], x1 = vertices[index1], x2 = vertices[index2];
     var y0 = vertices[index0 + 1], y1 = vertices[index1 + 1], y2 = vertices[index2 + 1];
@@ -292,18 +335,18 @@ Mesh.prototype.renderMeshFlat = function (Mesh)
 };
 
 /*
-Mesh.prototype.setTexture = function (texture)
-{
-    //TODO SET THE TEXTURES
-    //TODO VISIBILITY
-    //TODO SETTER
+ Mesh.prototype.setTexture = function (texture)
+ {
+ //TODO SET THE TEXTURES
+ //TODO VISIBILITY
+ //TODO SETTER
 
-    // stop current texture
-    this.texture = texture;
-    this.width   = texture.frame.width;
-    this.height  = texture.frame.height;
-    this.updateFrame = true;
-};
+ // stop current texture
+ this.texture = texture;
+ this.width   = texture.frame.width;
+ this.height  = texture.frame.height;
+ this.updateFrame = true;
+ };
  */
 
 /**
@@ -312,8 +355,7 @@ Mesh.prototype.setTexture = function (texture)
  * @param event
  * @private
  */
-
-Mesh.prototype.onTextureUpdate = function ()
+Mesh.prototype._onTextureUpdate = function ()
 {
     this.updateFrame = true;
 };
@@ -326,54 +368,102 @@ Mesh.prototype.onTextureUpdate = function ()
  */
 Mesh.prototype.getBounds = function (matrix)
 {
-    var worldTransform = matrix || this.worldTransform;
+    if (!this._currentBounds) {
+        var worldTransform = matrix || this.worldTransform;
 
-    var a = worldTransform.a;
-    var b = worldTransform.b;
-    var c = worldTransform.c;
-    var d = worldTransform.d;
-    var tx = worldTransform.tx;
-    var ty = worldTransform.ty;
+        var a = worldTransform.a;
+        var b = worldTransform.b;
+        var c = worldTransform.c;
+        var d = worldTransform.d;
+        var tx = worldTransform.tx;
+        var ty = worldTransform.ty;
 
-    var maxX = -Infinity;
-    var maxY = -Infinity;
+        var maxX = -Infinity;
+        var maxY = -Infinity;
 
-    var minX = Infinity;
-    var minY = Infinity;
+        var minX = Infinity;
+        var minY = Infinity;
 
-    var vertices = this.vertices;
-    for (var i = 0, n = vertices.length; i < n; i += 2)
-    {
-        var rawX = vertices[i], rawY = vertices[i + 1];
-        var x = (a * rawX) + (c * rawY) + tx;
-        var y = (d * rawY) + (b * rawX) + ty;
+        var vertices = this.vertices;
+        for (var i = 0, n = vertices.length; i < n; i += 2) {
+            var rawX = vertices[i], rawY = vertices[i + 1];
+            var x = (a * rawX) + (c * rawY) + tx;
+            var y = (d * rawY) + (b * rawX) + ty;
 
-        minX = x < minX ? x : minX;
-        minY = y < minY ? y : minY;
+            minX = x < minX ? x : minX;
+            minY = y < minY ? y : minY;
 
-        maxX = x > maxX ? x : maxX;
-        maxY = y > maxY ? y : maxY;
+            maxX = x > maxX ? x : maxX;
+            maxY = y > maxY ? y : maxY;
+        }
+
+        if (minX === -Infinity || maxY === Infinity) {
+            return core.Rectangle.EMPTY;
+        }
+
+        var bounds = this._bounds;
+
+        bounds.x = minX;
+        bounds.width = maxX - minX;
+
+        bounds.y = minY;
+        bounds.height = maxY - minY;
+
+        // store a reference so that if this function gets called again in the render cycle we do not have to recalculate
+        this._currentBounds = bounds;
     }
 
-    if (minX === -Infinity || maxY === Infinity)
-    {
-        return core.math.Rectangle.EMPTY;
-    }
-
-    var bounds = this._bounds;
-
-    bounds.x = minX;
-    bounds.width = maxX - minX;
-
-    bounds.y = minY;
-    bounds.height = maxY - minY;
-
-    // store a reference so that if this function gets called again in the render cycle we do not have to recalculate
-    this._currentBounds = bounds;
-
-    return bounds;
+    return this._currentBounds;
 };
 
+/**
+ * Tests if a point is inside this mesh. Works only for TRIANGLE_MESH
+ *
+ * @param point {Point} the point to test
+ * @return {boolean} the result of the test
+ */
+Mesh.prototype.containsPoint = function( point ) {
+    if (!this.getBounds().contains(point.x, point.y)) {
+        return false;
+    }
+    this.worldTransform.applyInverse(point,  tempPoint);
+
+    var vertices = this.vertices;
+    var points = tempPolygon.points;
+    var i, len;
+
+    if (this.drawMode === Mesh.DRAW_MODES.TRIANGLES) {
+        var indices = this.indices;
+        len = this.indices.length;
+        //TODO: inline this.
+        for (i=0;i<len;i+=3) {
+            var ind0 = indices[i]*2, ind1 = indices[i+1]*2, ind2 = indices[i+2]*2;
+            points[0] = vertices[ind0];
+            points[1] = vertices[ind0+1];
+            points[2] = vertices[ind1];
+            points[3] = vertices[ind1+1];
+            points[4] = vertices[ind2];
+            points[5] = vertices[ind2+1];
+            if (tempPolygon.contains(tempPoint.x, tempPoint.y)) {
+                return true;
+            }
+        }
+    } else {
+        len = vertices.length;
+        for (i=0;i<len;i+=6) {
+            points[0] = vertices[i];
+            points[1] = vertices[i+1];
+            points[2] = vertices[i+2];
+            points[3] = vertices[i+3];
+            points[4] = vertices[i+4];
+            points[5] = vertices[i+5];
+            if (tempPolygon.contains(tempPoint.x, tempPoint.y)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
 /**
  * Different drawing buffer modes supported
  *

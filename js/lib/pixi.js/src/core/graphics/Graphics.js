@@ -1,5 +1,4 @@
 var Container = require('../display/Container'),
-    Sprite = require('../sprites/Sprite'),
     Texture = require('../textures/Texture'),
     CanvasBuffer = require('../renderers/canvas/utils/CanvasBuffer'),
     CanvasGraphics = require('../renderers/canvas/utils/CanvasGraphics'),
@@ -13,7 +12,7 @@ var Container = require('../display/Container'),
  * rectangles to the display, and to color and fill them.
  *
  * @class
- * @extends Container
+ * @extends PIXI.Container
  * @memberof PIXI
  */
 function Graphics()
@@ -780,6 +779,9 @@ Graphics.prototype._renderCanvas = function (renderer)
         this._prevTint = this.tint;
     }
 
+    // this code may still be needed so leaving for now..
+    //
+    /*
     if (this._cacheAsBitmap)
     {
         if (this.dirty || this.cachedSpriteDirty)
@@ -799,29 +801,27 @@ Graphics.prototype._renderCanvas = function (renderer)
 
         return;
     }
-    else
+    */
+    var context = renderer.context;
+    var transform = this.worldTransform;
+
+    if (this.blendMode !== renderer.currentBlendMode)
     {
-        var context = renderer.context;
-        var transform = this.worldTransform;
-
-        if (this.blendMode !== renderer.currentBlendMode)
-        {
-            renderer.currentBlendMode = this.blendMode;
-            context.globalCompositeOperation = renderer.blendModes[renderer.currentBlendMode];
-        }
-
-        var resolution = renderer.resolution;
-        context.setTransform(
-            transform.a * resolution,
-            transform.b * resolution,
-            transform.c * resolution,
-            transform.d * resolution,
-            transform.tx * resolution,
-            transform.ty * resolution
-        );
-
-        CanvasGraphics.renderGraphics(this, context);
+        renderer.currentBlendMode = this.blendMode;
+        context.globalCompositeOperation = renderer.blendModes[renderer.currentBlendMode];
     }
+
+    var resolution = renderer.resolution;
+    context.setTransform(
+        transform.a * resolution,
+        transform.b * resolution,
+        transform.c * resolution,
+        transform.d * resolution,
+        transform.tx * resolution,
+        transform.ty * resolution
+    );
+
+    CanvasGraphics.renderGraphics(this, context);
 };
 
 /**
@@ -1148,7 +1148,7 @@ Graphics.prototype.drawShape = function (shape)
 
     if (data.type === CONST.SHAPES.POLY)
     {
-        data.shape.closed = this.filling;
+        data.shape.closed = data.shape.closed || this.filling;
         this.currentPath = data;
     }
 

@@ -10,7 +10,7 @@ var SystemRenderer = require('../SystemRenderer'),
  *
  * @class
  * @memberof PIXI
- * @extends SystemRenderer
+ * @extends PIXI.SystemRenderer
  * @param [width=800] {number} the width of the canvas view
  * @param [height=600] {number} the height of the canvas view
  * @param [options] {object} The optional renderer parameters
@@ -212,6 +212,21 @@ CanvasRenderer.prototype.renderDisplayObject = function (displayObject, context)
     this.context = tempContext;
 };
 
+CanvasRenderer.prototype.resize = function (w, h)
+{
+    SystemRenderer.prototype.resize.call(this, w, h);
+
+    //reset the scale mode.. oddly this seems to be reset when the canvas is resized.
+    //surely a browser bug?? Let pixi fix that for you..
+    this.currentScaleMode = CONST.SCALE_MODES.DEFAULT;
+    
+    if(this.smoothProperty)
+    {
+        this.context[this.smoothProperty] = (this.currentScaleMode === CONST.SCALE_MODES.LINEAR);
+    }
+
+};
+
 /**
  * Maps Pixi blend modes to canvas blend modes.
  *
@@ -239,7 +254,7 @@ CanvasRenderer.prototype._mapBlendModes = function ()
             this.blendModes[CONST.BLEND_MODES.DIFFERENCE]    = 'difference';
             this.blendModes[CONST.BLEND_MODES.EXCLUSION]     = 'exclusion';
             this.blendModes[CONST.BLEND_MODES.HUE]           = 'hue';
-            this.blendModes[CONST.BLEND_MODES.SATURATION]    = 'saturation';
+            this.blendModes[CONST.BLEND_MODES.SATURATION]    = 'saturate';
             this.blendModes[CONST.BLEND_MODES.COLOR]         = 'color';
             this.blendModes[CONST.BLEND_MODES.LUMINOSITY]    = 'luminosity';
         }

@@ -16,7 +16,7 @@ var core = require('../core');
  * http://www.bmglyph.com/ for mac.
  *
  * @class
- * @extends Container
+ * @extends PIXI.Container
  * @memberof PIXI.extras
  * @param text {string} The copy that you would like the text to display
  * @param style {object} The style parameters
@@ -216,7 +216,7 @@ Object.defineProperties(BitmapText.prototype, {
 BitmapText.prototype.updateText = function ()
 {
     var data = BitmapText.fonts[this._font.name];
-    var pos = new core.math.Point();
+    var pos = new core.Point();
     var prevCharCode = null;
     var chars = [];
     var lastLineWidth = 0;
@@ -271,7 +271,7 @@ BitmapText.prototype.updateText = function ()
             pos.x += charData.kerning[prevCharCode];
         }
 
-        chars.push({texture:charData.texture, line: line, charCode: charCode, position: new core.math.Point(pos.x + charData.xOffset, pos.y + charData.yOffset)});
+        chars.push({texture:charData.texture, line: line, charCode: charCode, position: new core.Point(pos.x + charData.xOffset, pos.y + charData.yOffset)});
         lastLineWidth = pos.x + (charData.texture.width + charData.xOffset);
         pos.x += charData.xAdvance;
 
@@ -344,13 +344,34 @@ BitmapText.prototype.updateText = function ()
  */
 BitmapText.prototype.updateTransform = function ()
 {
+    this.validate();
+    this.containerUpdateTransform();
+};
+
+/**
+ * Validates text before calling parent's getLocalBounds
+ *
+ * @return {Rectangle} The rectangular bounding area
+ */
+
+BitmapText.prototype.getLocalBounds = function()
+{
+    this.validate();
+    return core.Container.prototype.getLocalBounds.call(this);
+};
+
+/**
+ * Updates text when needed
+ *
+ * @private
+ */
+BitmapText.prototype.validate = function()
+{
     if (this.dirty)
     {
         this.updateText();
         this.dirty = false;
     }
-
-    this.containerUpdateTransform();
 };
 
 BitmapText.fonts = {};

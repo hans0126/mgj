@@ -16,7 +16,7 @@ var math = require('../math'),
  * ```
  *
  * @class
- * @extends Container
+ * @extends PIXI.Container
  * @memberof PIXI
  * @param texture {Texture} The texture for this sprite
  */
@@ -102,8 +102,8 @@ Object.defineProperties(Sprite.prototype, {
     /**
      * The width of the sprite, setting this will actually modify the scale to achieve the value set
      *
-     * @member
-     * @memberof Sprite#
+     * @member {number}
+     * @memberof PIXI.Sprite#
      */
     width: {
         get: function ()
@@ -120,8 +120,8 @@ Object.defineProperties(Sprite.prototype, {
     /**
      * The height of the sprite, setting this will actually modify the scale to achieve the value set
      *
-     * @member
-     * @memberof Sprite#
+     * @member {number}
+     * @memberof PIXI.Sprite#
      */
     height: {
         get: function ()
@@ -136,10 +136,10 @@ Object.defineProperties(Sprite.prototype, {
     },
 
     /**
-     * The height of the sprite, setting this will actually modify the scale to achieve the value set
+     * The texture that the sprite is using
      *
-     * @member
-     * @memberof Sprite#
+     * @member {PIXI.Texture}
+     * @memberof PIXI.Sprite#
      */
     texture: {
         get: function ()
@@ -392,8 +392,6 @@ Sprite.prototype._renderCanvas = function (renderer)
             width,
             height;
 
-        var resolution = texture.baseTexture.resolution / renderer.resolution;
-
         renderer.context.globalAlpha = this.worldAlpha;
 
         // If smoothingEnabled is supported and we need to change the smoothing property for this texture
@@ -464,6 +462,8 @@ Sprite.prototype._renderCanvas = function (renderer)
 
         }
 
+        var resolution = texture.baseTexture.resolution;
+
         if (this.tint !== 0xFFFFFF)
         {
             if (this.cachedTint !== this.tint)
@@ -478,10 +478,10 @@ Sprite.prototype._renderCanvas = function (renderer)
                 this.tintedTexture,
                 0,
                 0,
-                width * resolution * renderer.resolution,
-                height * resolution * renderer.resolution,
-                dx,
-                dy,
+                width * resolution,
+                height * resolution,
+                dx * renderer.resolution,
+                dy * renderer.resolution,
                 width * renderer.resolution,
                 height * renderer.resolution
             );
@@ -492,10 +492,10 @@ Sprite.prototype._renderCanvas = function (renderer)
                 texture.baseTexture.source,
                 texture.crop.x * resolution,
                 texture.crop.y * resolution,
-                width * resolution * renderer.resolution,
-                height * resolution * renderer.resolution,
-                dx,
-                dy,
+                width * resolution,
+                height * resolution,
+                dx  * renderer.resolution,
+                dy  * renderer.resolution,
                 width * renderer.resolution,
                 height * renderer.resolution
             );

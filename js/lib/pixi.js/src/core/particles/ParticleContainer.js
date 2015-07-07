@@ -22,7 +22,7 @@ var Container = require('../display/Container'),
  * And here you have a hundred sprites that will be renderer at the speed of light.
  *
  * @class
- * @extends Container
+ * @extends PIXI.Container
  * @memberof PIXI
  *
  * @param [size=15000] {number} The number of images in the SpriteBatch before it flushes.
@@ -320,7 +320,7 @@ ParticleContainer.prototype.destroy = function () {
 
     if (this._buffers) {
         for (var i = 0; i < this._buffers.length; ++i) {
-            this._buffers.destroy();
+            this._buffers[i].destroy();
         }
     }
 

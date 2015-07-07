@@ -15,7 +15,7 @@ function BaseTexture(source, scaleMode, resolution)
 {
     EventEmitter.call(this);
 
-    this.uuid = utils.uuid();
+    this.uid = utils.uid();
 
     /**
      * The Resolution of the texture.
@@ -146,7 +146,7 @@ function BaseTexture(source, scaleMode, resolution)
      * Fired when a not-immediately-available source finishes loading.
      *
      * @event loaded
-     * @memberof BaseTexture#
+     * @memberof PIXI.BaseTexture#
      * @protected
      */
 
@@ -154,7 +154,7 @@ function BaseTexture(source, scaleMode, resolution)
      * Fired when a not-immediately-available source fails to load.
      *
      * @event error
-     * @memberof BaseTexture#
+     * @memberof PIXI.BaseTexture#
      * @protected
      */
 }
@@ -416,7 +416,7 @@ BaseTexture.fromCanvas = function (canvas, scaleMode)
 {
     if (!canvas._pixiId)
     {
-        canvas._pixiId = 'canvas_' + utils.uuid();
+        canvas._pixiId = 'canvas_' + utils.uid();
     }
 
     var baseTexture = utils.BaseTextureCache[canvas._pixiId];

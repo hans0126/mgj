@@ -8,13 +8,13 @@ var fs = require('fs');
  * Currently the r property of the texture is used to offset the x and the g property of the texture is used to offset the y.
  *
  * @class
- * @extends AbstractFilter
- * @namespace PIXI
+ * @extends PIXI.AbstractFilter
+ * @memberof PIXI.filters
  * @param sprite {Sprite} the sprite used for the displacement map. (make sure its added to the scene!)
  */
 function DisplacementFilter(sprite)
 {
-    var maskMatrix = new core.math.Matrix();
+    var maskMatrix = new core.Matrix();
     sprite.renderable = false;
 
     core.AbstractFilter.call(this,
@@ -34,7 +34,7 @@ function DisplacementFilter(sprite)
     this.maskMatrix = maskMatrix;
 
 
-    this.scale = new core.math.Point(20,20);
+    this.scale = new core.Point(20,20);
 
 }
 

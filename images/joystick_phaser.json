@@ -1,0 +1,28 @@
+{"frames": {
+
+"joystick.png":
+{
+	"frame": {"x":232,"y":2,"w":140,"h":140},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":140,"h":140},
+	"sourceSize": {"w":140,"h":140}
+},
+"joystick_base.png":
+{
+	"frame": {"x":2,"y":2,"w":228,"h":228},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":228,"h":228},
+	"sourceSize": {"w":228,"h":228}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "joystick.png",
+	"format": "RGBA8888",
+	"size": {"w":374,"h":232},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:d0e93668cee02daa8ce09803bebfd0f6:a90671dd1ba9f61921a30467bcc0f7f4:df00f8f6c69ce523d11736da1befeed7$"
+}
+}

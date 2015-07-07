@@ -12,7 +12,7 @@ requirejs.config({
     }
 })
 
-requirejs(['init', 'io', 'jquery', 'pixi', 'TweenMax', 'EasePack', 'meter'], function(init, io) {
+requirejs(['init', 'jquery', 'pixi', 'TweenMax', 'EasePack', 'meter'], function(init) {
 
     PIXI.Container.prototype.updateLayersOrder = function() {
         this.children.sort(function(a, b) {
@@ -72,12 +72,12 @@ requirejs(['init', 'io', 'jquery', 'pixi', 'TweenMax', 'EasePack', 'meter'], fun
             currentId = Math.floor(Math.random() * 1000) + "_" + Math.floor(Math.random() * 1000);
             window.localStorage['id'] = currentId;
 
-            var socket = io();
+           /* var socket = io();
 
             socket.emit('register', {
                 id: currentId
-            });
-              launchIntoFullscreen(document.documentElement);
+            });*/
+            //  launchIntoFullscreen(document.documentElement);
             $(this).hide();
             init.init();
 

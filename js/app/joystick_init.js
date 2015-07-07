@@ -1,8 +1,8 @@
 define(['app/keyboard', 'io'], function(kb, io) {
-    var socket = io();
+    // var socket = io();
 
     function init() {
-
+        var scores = 0;
         stats = new Stats();
         stats.setMode(0); // 0: fps, 1: ms
 
@@ -94,6 +94,8 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
 
         function showJoystick(event) {
+            scores++;
+            score.text = scores;
             var _tp = event.data.getLocalPosition(this);
             joystick.visible = true;
             joystick.x = _tp.x;
@@ -103,16 +105,19 @@ define(['app/keyboard', 'io'], function(kb, io) {
             stick.data = event.data;
             //this.alpha = 0.5;
             stick.dragging = true;
+
             stick.sx = stick.data.getLocalPosition(this).x * stick.scale.x;
             stick.sy = stick.data.getLocalPosition(this).y * stick.scale.y;
             stick.lastMove = {
                 x: 0,
                 y: 0
             };
+
+
         }
 
         function hideJoystick() {
-            joystick.visible = false;
+            // joystick.visible = false;
             stick.dragging = false;
             // set the interaction data to null
             stick.data = null;
@@ -123,6 +128,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
                 y: 0
             };
             socketEmit(0, 0);
+
         }
 
         function joystickMove() {
@@ -176,17 +182,17 @@ define(['app/keyboard', 'io'], function(kb, io) {
         }
 
         function _shooting() {
-            socket.emit('shooting',currentId);
+            //   socket.emit('shooting',currentId);
         }
 
-        var socket = io();
-
+        //var socket = io();
+        /*
         socket.on('get score', function(msg) {
             if (msg.id == currentId) {
                 score.text = msg.score;
             }
         })
-
+    */
         var left = kb.keyboard(37),
             up = kb.keyboard(38),
             right = kb.keyboard(39),
@@ -279,11 +285,11 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
     function socketEmit(_x, _y) {
 
-        socket.emit('update', {
-            x: _x,
-            y: _y,
-            id: currentId
-        });
+        /* socket.emit('update', {
+             x: _x,
+             y: _y,
+             id: currentId
+         });*/
     }
 
     /* requestAnimFrame */

@@ -24,7 +24,7 @@ var BaseTexture = require('./BaseTexture'),
  * See the ["deus" demo](http://www.goodboydigital.com/pixijs/examples/deus/).
  *
  * @class
- * @extends BaseTexture
+ * @extends PIXI.BaseTexture
  * @memberof PIXI
  * @param source {HTMLVideoElement}
  * @param [scaleMode] {number} See {@link SCALE_MODES} for possible values
@@ -163,7 +163,7 @@ VideoBaseTexture.fromVideo = function (video, scaleMode)
 {
     if (!video._pixiId)
     {
-        video._pixiId = 'video_' + utils.uuid();
+        video._pixiId = 'video_' + utils.uid();
     }
 
     var baseTexture = utils.BaseTextureCache[video._pixiId];
