@@ -28,14 +28,14 @@
         });
 
         $(this).hide();
-        // launchIntoFullscreen(document.documentElement);
+        launchIntoFullscreen(document.documentElement);
         init();
 
     };
 
 
     function init() {
-        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
+        var game = new Phaser.Game('100%', '100%', Phaser.AUTO, '', {
             preload: preload,
             create: create,
             update: update
@@ -52,8 +52,8 @@
 
         function create() {
 
-            game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
-            game.scale.startFullScreen(false);
+            game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            game.scale.startFullScreen(true);
             var joystick = game.add.group();
             joystick.x = 200;
             joystick.y = game.world.centerY;
@@ -113,13 +113,14 @@
 
         function actionOnClick(pointer) {
             socket.emit('shooting', currentId);
-            socket.on('get score', function(msg) {
-                if (msg.id == currentId) {
-                    score.text = "score:" + msg.score;
-                }
-            })
+
         }
 
+        socket.on('get score', function(msg) {
+            if (msg.id == currentId) {
+                score.text = "score:" + msg.score;
+            }
+        })
 
         function onDragStart(sprite, pointer) {
             //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
@@ -147,17 +148,17 @@
                 result = "x:" + stick.x + ",y:" + stick.y;
                 if (Math.abs(stick.x) > 30) {
                     if (stick.x > 0) {
-                        _returnPostion.x = 5;
+                        _returnPostion.x = 200;
                     } else {
-                        _returnPostion.x = -5;
+                        _returnPostion.x = -200;
                     }
                 }
 
                 if (Math.abs(stick.y) > 30) {
                     if (stick.y > 0) {
-                        _returnPostion.y = 5;
+                        _returnPostion.y = 200;
                     } else {
-                        _returnPostion.y = -5;
+                        _returnPostion.y = -200;
                     }
                 }
 

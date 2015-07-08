@@ -37,14 +37,20 @@ io.on('connection', function(socket) {
         playerList.push(msg.id);
         io.emit('addNewPlayer', msg.id);
 
+        socket.on('disconnect', function() {
+            io.emit('disconnect', this_id);
+            console.log('user disconnected');
+        });
+
     })
 
     socket.on('update', function(msg) {
         io.emit('update sprite', msg);
+        console.log(msg);
     })
 
     socket.on('shooting', function(msg) {
-    
+
         io.emit('shooting', msg);
     })
 
@@ -52,7 +58,5 @@ io.on('connection', function(socket) {
         io.emit('get score', msg);
     })
 
-    socket.on('disconnect', function() {
-        console.log('user disconnected');
-    });
+
 });
