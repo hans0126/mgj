@@ -150,7 +150,7 @@ function create() {
     })
 
     socket.on('disconnect', function(msg) {
-        console.log(msg);
+       
         //playerList[msg].kill();
         players.removeChild(playerList[msg]);
     })

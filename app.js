@@ -46,7 +46,7 @@ io.on('connection', function(socket) {
 
     socket.on('update', function(msg) {
         io.emit('update sprite', msg);
-        console.log(msg);
+        
     })
 
     socket.on('shooting', function(msg) {
