@@ -37,6 +37,8 @@ var firingTimer = 0;
 var stateText;
 var livingEnemies = [];
 var socket;
+var result;
+var de = 280;
 
 function create() {
     socket = io.connect();
@@ -53,6 +55,9 @@ function create() {
     bullets.createMultiple(30, 'bullet');
     bullets.setAll('anchor.x', 0.5);
     bullets.setAll('anchor.y', 1);
+    bullets.setAll('pivot.x', 0.5);
+    bullets.setAll('pivot.y', 0.5);
+
     bullets.setAll('outOfBoundsKill', true);
     bullets.setAll('checkWorldBounds', true);
 
@@ -77,6 +82,46 @@ function create() {
         players.push(playerss);
     }
     */
+
+    var hero = players.create(400, 500, 'ship');
+    hero.anchor.setTo(0.5, 0.5);
+    game.physics.enable(hero, Phaser.Physics.ARCADE);
+    hero.vx = 0;
+    hero.vy = 0;
+    hero.life = 2;
+    hero.bulletTime = 0;
+
+    graphics2 = game.add.graphics(0, 0);
+    graphics2.clear();
+    //graphics2.lineStyle(1, 0xffffff);
+    graphics2.beginFill(0xa000f3, 0.5);
+    graphics2.arc(0, 0, 160, 0, game.math.degToRad(de), true);
+    graphics2.endFill();
+    graphics2.directRevise = game.math.degToRad((360 - de) / 2);
+    graphics2.rotation =  0;
+    hero.addChild(graphics2);
+    graphics2.y = -10;
+
+
+
+    game.input.mouse.onMouseMove = function(pointer, x, y) {
+        // pointer returns the active pointer, x and y return the position on the canvas
+        // result = (pointer.x - hero.x) + "," + (pointer.y - hero.y);
+        var _x = pointer.x - hero.x;
+        var _y = pointer.y - hero.y;
+        //  graphics2.rotation = Math.atan2(_y, _x) + graphics2.directRevise;
+        //console.log(pointer)
+    }
+
+    game.input.mouse.onMouseDown = function(pointer, x, y) {
+        // result = "A";
+        // result= graphics2.rotation;
+        var _x = pointer.x - hero.x;
+        var _y = pointer.y - hero.y;
+
+        fireBullet(hero, _x, _y);
+    }
+
     //  The baddies!
     aliens = game.add.group();
     aliens.enableBody = true;
@@ -135,10 +180,10 @@ function create() {
         hero.id = msg;
         hero.score = 0;
         playerList[msg] = hero;
-     
+
         socket.on('update sprite', function(msg) {
             playerList[msg.id].vx = msg.x;
-            playerList[msg.id].vy = msg.y;  
+            playerList[msg.id].vy = msg.y;
 
         });
 
@@ -150,10 +195,11 @@ function create() {
     })
 
     socket.on('disconnect', function(msg) {
-       
+
         //playerList[msg].kill();
         players.removeChild(playerList[msg]);
     })
+
 
 
 
@@ -198,26 +244,28 @@ function setupInvader(invader) {
 
 function descend() {
 
-    aliens.y += 10;
+    // aliens.y += 10;
 
 }
 
 function update() {
-
+   // graphics2.rotation += 0.01;
     //  Scroll the background
+    //graphics2.rotation += 0.01;
+   // result = graphics2.rotation;
     starfield.tilePosition.y += 2;
     for (var i = 0; i < players.countLiving(); i++) {
         var _player = players.getChildAt(i);
-        
+
 
         if (_player.alive) {
             //  Reset the player, then check for movement keys
-           
+
             _player.body.velocity.setTo(0, 0);
             _player.body.velocity.x = _player.vx;
 
             if (game.time.now > firingTimer) {
-               // enemyFires();
+                // enemyFires();
             }
 
             //  Run collision
@@ -234,6 +282,8 @@ function render() {
     // {
     //     game.debug.body(aliens.children[i]);
     // }
+    //  game.debug.inputInfo(32, 32);
+    game.debug.text(result, 10, 20);
 
 }
 
@@ -241,12 +291,12 @@ function collisionHandler(bullet, alien) {
 
     //  When a bullet hits an alien we kill them both
 
-    playerList[bullet.heroId].score += 20;
-    console.log(playerList[bullet.heroId].score);
-    socket.emit('get score', {
-        id: bullet.heroId,
-        score: playerList[bullet.heroId].score
-    });
+    //  playerList[bullet.heroId].score += 20;
+    // console.log(playerList[bullet.heroId].score);
+    /* socket.emit('get score', {
+         id: bullet.heroId,
+         score: playerList[bullet.heroId].score
+     });*/
     bullet.kill();
     alien.kill();
 
@@ -343,15 +393,25 @@ function enemyFires() {
 
 }
 
-function fireBullet(_player) {
+function fireBullet(_player, _x, _y) {
 
     if (_player.alive) {
         if (game.time.now > _player.bulletTime) {
             bullet = bullets.getFirstExists(false);
             if (bullet) {
+                bullet.rotation = Math.atan2(_y, _x) + game.math.degToRad(90);
                 bullet.heroId = _player.id;
-                bullet.reset(_player.x, _player.y + 8);
-                bullet.body.velocity.y = -400;
+                bullet.reset(_player.x, _player.y - 10);
+                // bullet.body.velocity.y = _y;
+                // bullet.body.velocity.x = _x;
+                // this.game.physics.arcade.velocityFromAngle(Math.atan2(_y, _x), 600,  bullet.body.velocity);
+                // bullet.body.gravity.set(,200);
+
+                //  game.physics.arcade.moveToPointer(bullet, 300);
+
+                //  game.physics.arcade.moveToXY(bullet, Math.atan2(_y, _x),Math.atan2(_y, _x) , 300) 
+                result = (Math.atan2(_y, _x) + game.math.degToRad(90));
+
             }
             _player.bulletTime = game.time.now + 200;
         }

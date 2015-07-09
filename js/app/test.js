@@ -20,6 +20,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         var joyStickLayer = new PIXI.Container();
         var buttonLayer = new PIXI.Container();
+        var ta ='';
 
       // buttonLayer.x = displayWidth / 2;
 
@@ -75,7 +76,7 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         var score = createScore();
 
-        score.text =  scores;
+        score.text =  1999;
 
 
 
@@ -117,8 +118,12 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         function showJoystick(event) {
            
+           //$('body').append(event.data.identifier);
            // event.data.originalEvent.preventDefault();
-            console.log(event.data);
+           //event.name = Math.random()*999;
+           console.log(event);
+          ta+=event.data.identifier;
+          score.text = "A"+ta;
             var _tp = event.data.getLocalPosition(this);
             this.alpha = 0.5;
          
@@ -136,14 +141,15 @@ define(['app/keyboard', 'io'], function(kb, io) {
 
         }
 
-        function hideJoystick() {
+        function hideJoystick(event) {
+           
             // joystick.visible = false;
             this.dragging = false;
             // set the interaction data to null
             this.data = null;
-          
+           
             socketEmit(0, 0);
-
+           
         }
 
         function joystickMove() {
