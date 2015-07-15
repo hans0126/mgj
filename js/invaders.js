@@ -38,7 +38,11 @@ var stateText;
 var livingEnemies = [];
 var socket;
 var result;
-var de = 280;
+var de = 35;
+//彈道偏移
+var tt = [1, -1];
+
+var angle = 0;
 
 function create() {
     socket = io.connect();
@@ -52,11 +56,12 @@ function create() {
     bullets = game.add.group();
     bullets.enableBody = true;
     bullets.physicsBodyType = Phaser.Physics.ARCADE;
-    bullets.createMultiple(30, 'bullet');
+    bullets.createMultiple(300, 'bullet');
     bullets.setAll('anchor.x', 0.5);
     bullets.setAll('anchor.y', 1);
     bullets.setAll('pivot.x', 0.5);
     bullets.setAll('pivot.y', 0.5);
+
 
     bullets.setAll('outOfBoundsKill', true);
     bullets.setAll('checkWorldBounds', true);
@@ -95,13 +100,15 @@ function create() {
     graphics2.clear();
     //graphics2.lineStyle(1, 0xffffff);
     graphics2.beginFill(0xa000f3, 0.5);
-    graphics2.arc(0, 0, 160, 0, game.math.degToRad(de), true);
+    graphics2.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
+    // graphics2.drawRect(-10, -100, 20, 100);
+    //   graphics2.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
     graphics2.endFill();
-    graphics2.directRevise = game.math.degToRad((360 - de) / 2);
-    graphics2.rotation =  0;
+
     hero.addChild(graphics2);
     graphics2.y = -10;
 
+    console.log(graphics2);
 
 
     game.input.mouse.onMouseMove = function(pointer, x, y) {
@@ -120,6 +127,12 @@ function create() {
         var _y = pointer.y - hero.y;
 
         fireBullet(hero, _x, _y);
+
+        //graphics2.clear()
+        //  graphics2.arc(0, 0, 160, 0, game.math.degToRad(90) * -1, 1);
+        //graphics2.endFill();
+
+        de++;
     }
 
     //  The baddies!
@@ -249,10 +262,10 @@ function descend() {
 }
 
 function update() {
-   // graphics2.rotation += 0.01;
+    // graphics2.rotation += 0.01;
     //  Scroll the background
-    //graphics2.rotation += 0.01;
-   // result = graphics2.rotation;
+
+    // result = graphics2.rotation;
     starfield.tilePosition.y += 2;
     for (var i = 0; i < players.countLiving(); i++) {
         var _player = players.getChildAt(i);
@@ -274,6 +287,47 @@ function update() {
         }
     }
 
+
+    if (cursors.left.isDown) {
+        // graphics2.rotation -= 0.1;
+        angle -= 5;
+    } else if (cursors.right.isDown) {
+        // graphics2.rotation += 0.1;
+        angle += 5;
+    }
+
+    if (cursors.up.isDown) {
+        // graphics2.rotation -= 0.1;
+        if (de < 180) {
+            de += 5;
+        }
+    } else if (cursors.down.isDown) {
+        // graphics2.rotation += 0.1;
+
+        if (de > 10) {
+            de -= 5;
+        } 
+    }
+
+
+    if (fireButton.isDown) {
+        fireBullet(players.children[0]);
+
+    }
+
+    graphics2.clear();
+    //graphics2.lineStyle(1, 0xffffff);
+    graphics2.beginFill(0xa000f3, 0.5);
+    graphics2.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
+    // graphics2.drawRect(-10, -100, 20, 100);
+    //   graphics2.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
+    graphics2.endFill();
+
+    graphics2.rotation = game.math.degToRad(angle) + game.math.degToRad(Math.abs(90 - (de / 2))) * -1;
+
+
+    //graphics2.endAngle += 0.1;
+    // result = graphics2.rotation + "/" + Math.PI;
 }
 
 function render() {
@@ -399,21 +453,20 @@ function fireBullet(_player, _x, _y) {
         if (game.time.now > _player.bulletTime) {
             bullet = bullets.getFirstExists(false);
             if (bullet) {
-                bullet.rotation = Math.atan2(_y, _x) + game.math.degToRad(90);
+
                 bullet.heroId = _player.id;
                 bullet.reset(_player.x, _player.y - 10);
-                // bullet.body.velocity.y = _y;
-                // bullet.body.velocity.x = _x;
-                // this.game.physics.arcade.velocityFromAngle(Math.atan2(_y, _x), 600,  bullet.body.velocity);
-                // bullet.body.gravity.set(,200);
+                var a = angle + (Math.floor(Math.random() * de / 2) * tt[Math.floor(Math.random() * 2)]);
+                var _dgre = game.math.degToRad(a);
 
-                //  game.physics.arcade.moveToPointer(bullet, 300);
+                bullet.rotation = _dgre;
+                var _xx = _player.x + Math.sin(_dgre) * 160;
+                var _yy = _player.y + Math.cos(_dgre) * -160;
+                game.physics.arcade.moveToXY(bullet, _xx, _yy, 500)
 
-                //  game.physics.arcade.moveToXY(bullet, Math.atan2(_y, _x),Math.atan2(_y, _x) , 300) 
-                result = (Math.atan2(_y, _x) + game.math.degToRad(90));
 
             }
-            _player.bulletTime = game.time.now + 200;
+            _player.bulletTime = game.time.now + 5;
         }
 
     }
