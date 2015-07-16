@@ -15,6 +15,7 @@ function preload() {
     game.load.spritesheet('kaboom', 'images/invaders/explode.png', 128, 128);
     game.load.image('starfield', 'images/invaders/starfield.png');
     game.load.image('background', 'images/starstruck/background2.png');
+    game.load.atlasJSONHash('fighter', 'images/fighter.png', 'images/fighter.json');
 
 }
 
@@ -26,6 +27,8 @@ var bullets;
 var bulletTime = 0;
 var cursors;
 var fireButton;
+var moveLeft;
+var moveRight;
 var explosions;
 var starfield;
 var score = 0;
@@ -88,27 +91,59 @@ function create() {
     }
     */
 
-    var hero = players.create(400, 500, 'ship');
+    hero = players.create(400, 500, 'fighter', 'p3.png');
     hero.anchor.setTo(0.5, 0.5);
     game.physics.enable(hero, Phaser.Physics.ARCADE);
     hero.vx = 0;
     hero.vy = 0;
     hero.life = 2;
     hero.bulletTime = 0;
+    hero.movement = false;
 
-    graphics2 = game.add.graphics(0, 0);
-    graphics2.clear();
-    //graphics2.lineStyle(1, 0xffffff);
-    graphics2.beginFill(0xa000f3, 0.5);
-    graphics2.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
-    // graphics2.drawRect(-10, -100, 20, 100);
-    //   graphics2.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
-    graphics2.endFill();
+    hero.animations.add('left', [
+        'p2.png',
+        'p1.png'
+    ], 10, false, false);
 
-    hero.addChild(graphics2);
-    graphics2.y = -10;
+    hero.animations.add('left-center', [
+        'p2.png',
+        'p3.png'
+    ], 10, false, false);
 
-    console.log(graphics2);
+    hero.animations.add('right', [
+        'p4.png',
+        'p5.png'
+    ], 10, false, false);
+
+    hero.animations.add('right-center', [
+        'p4.png',
+        'p3.png'
+    ], 10, false, false);
+
+
+    for (var i = 0; i < 2; i++) {
+        attackRange = game.add.graphics(0, 0);
+        attackRange.clear();
+        //attackRange.lineStyle(1, 0xffffff);
+        attackRange.beginFill(0xa000f3, 0.2);
+        attackRange.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
+        // attackRange.drawRect(-10, -100, 20, 100);
+        //   attackRange.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
+        attackRange.endFill();
+
+        attackRange.bulletTime = 0;
+        hero.addChild(attackRange);
+        attackRange.y = -10;
+
+        if (i == 0) {
+            attackRange.x = hero.width / 2;
+        } else {
+            attackRange.x = hero.width / -2;
+        }
+
+    }
+
+
 
 
     game.input.mouse.onMouseMove = function(pointer, x, y) {
@@ -116,21 +151,21 @@ function create() {
         // result = (pointer.x - hero.x) + "," + (pointer.y - hero.y);
         var _x = pointer.x - hero.x;
         var _y = pointer.y - hero.y;
-        //  graphics2.rotation = Math.atan2(_y, _x) + graphics2.directRevise;
+        //  attackRange.rotation = Math.atan2(_y, _x) + attackRange.directRevise;
         //console.log(pointer)
     }
 
     game.input.mouse.onMouseDown = function(pointer, x, y) {
         // result = "A";
-        // result= graphics2.rotation;
+        // result= attackRange.rotation;
         var _x = pointer.x - hero.x;
         var _y = pointer.y - hero.y;
 
         fireBullet(hero, _x, _y);
 
-        //graphics2.clear()
-        //  graphics2.arc(0, 0, 160, 0, game.math.degToRad(90) * -1, 1);
-        //graphics2.endFill();
+        //attackRange.clear()
+        //  attackRange.arc(0, 0, 160, 0, game.math.degToRad(90) * -1, 1);
+        //attackRange.endFill();
 
         de++;
     }
@@ -179,6 +214,8 @@ function create() {
     //  And some controls to play the game with
     cursors = game.input.keyboard.createCursorKeys();
     fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+    moveLeft = game.input.keyboard.addKey(Phaser.Keyboard.A);
+    moveRight = game.input.keyboard.addKey(Phaser.Keyboard.D);
 
 
     socket.on('addNewPlayer', function(msg) {
@@ -262,10 +299,10 @@ function descend() {
 }
 
 function update() {
-    // graphics2.rotation += 0.01;
+    // attackRange.rotation += 0.01;
     //  Scroll the background
 
-    // result = graphics2.rotation;
+    // result = attackRange.rotation;
     starfield.tilePosition.y += 2;
     for (var i = 0; i < players.countLiving(); i++) {
         var _player = players.getChildAt(i);
@@ -289,25 +326,53 @@ function update() {
 
 
     if (cursors.left.isDown) {
-        // graphics2.rotation -= 0.1;
-        angle -= 5;
+        // attackRange.rotation -= 0.1;
+        angle -= 1;
     } else if (cursors.right.isDown) {
-        // graphics2.rotation += 0.1;
-        angle += 5;
+        // attackRange.rotation += 0.1;
+        angle += 1;
     }
 
     if (cursors.up.isDown) {
-        // graphics2.rotation -= 0.1;
+        // attackRange.rotation -= 0.1;
         if (de < 180) {
-            de += 5;
+            de += 1;
         }
     } else if (cursors.down.isDown) {
-        // graphics2.rotation += 0.1;
+        // attackRange.rotation += 0.1;
 
         if (de > 10) {
-            de -= 5;
-        } 
+            de -= 1;
+        }
     }
+
+    hero.body.velocity.x = 0;
+
+    if (moveLeft.isDown) {
+        if (hero.movement != 'left') {
+            hero.animations.play('left');
+            hero.movement = 'left';
+        }
+
+        hero.body.velocity.x = -150;
+
+    } else if (moveRight.isDown) {
+        if (hero.movement != 'right') {
+            hero.animations.play('right');
+            hero.movement = 'right';
+        }
+
+        hero.body.velocity.x = 150;
+    } else {
+        if (hero.movement == 'left') {
+            hero.animations.play('left-center');
+        } else if (hero.movement == 'right') {
+            hero.animations.play('right-center');
+        }
+
+        hero.movement = '';
+    }
+
 
 
     if (fireButton.isDown) {
@@ -315,19 +380,20 @@ function update() {
 
     }
 
-    graphics2.clear();
-    //graphics2.lineStyle(1, 0xffffff);
-    graphics2.beginFill(0xa000f3, 0.5);
-    graphics2.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
-    // graphics2.drawRect(-10, -100, 20, 100);
-    //   graphics2.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
-    graphics2.endFill();
+    for (var i = 0; i < hero.children.length; i++) {
+        var _attackRange = hero.children[i];
+        _attackRange.clear();
+        //attackRange.lineStyle(1, 0xffffff);
+        _attackRange.beginFill(0xa000f3, 0.2);
+        _attackRange.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
+        // attackRange.drawRect(-10, -100, 20, 100);
+        //   attackRange.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
+        _attackRange.endFill();
+        _attackRange.rotation = game.math.degToRad(angle) + game.math.degToRad(Math.abs(90 - (de / 2))) * -1;
+    }
 
-    graphics2.rotation = game.math.degToRad(angle) + game.math.degToRad(Math.abs(90 - (de / 2))) * -1;
-
-
-    //graphics2.endAngle += 0.1;
-    // result = graphics2.rotation + "/" + Math.PI;
+    //attackRange.endAngle += 0.1;
+    // result = attackRange.rotation + "/" + Math.PI;
 }
 
 function render() {
@@ -447,28 +513,43 @@ function enemyFires() {
 
 }
 
-function fireBullet(_player, _x, _y) {
+function fireBullet(_player) {
 
     if (_player.alive) {
-        if (game.time.now > _player.bulletTime) {
-            bullet = bullets.getFirstExists(false);
-            if (bullet) {
 
-                bullet.heroId = _player.id;
-                bullet.reset(_player.x, _player.y - 10);
-                var a = angle + (Math.floor(Math.random() * de / 2) * tt[Math.floor(Math.random() * 2)]);
-                var _dgre = game.math.degToRad(a);
+        for (var i = 0; i < _player.children.length; i++) {
 
-                bullet.rotation = _dgre;
-                var _xx = _player.x + Math.sin(_dgre) * 160;
-                var _yy = _player.y + Math.cos(_dgre) * -160;
-                game.physics.arcade.moveToXY(bullet, _xx, _yy, 500)
+            var _targetRange = _player.children[i];
 
+
+            if (game.time.now > _targetRange.bulletTime) {
+
+                var bullet = bullets.getFirstExists(false);
+                if (bullet) {
+
+                    var _emitX = _player.x + _targetRange.x;
+                    var _emitY = _player.y + _targetRange.y;
+
+                    bullet.heroId = _player.id;
+                    bullet.reset(_emitX, _emitY);
+                    var a = angle + (Math.floor(Math.random() * de / 2) * tt[Math.floor(Math.random() * 2)]);
+                    var _dgre = game.math.degToRad(a);
+
+
+                    bullet.rotation = _dgre;
+                    var _xx = _emitX + Math.sin(_dgre) * 160;
+                    var _yy = _emitY + Math.cos(_dgre) * -160;
+                    game.physics.arcade.moveToXY(bullet, _xx, _yy, 500);
+                    _targetRange.bulletTime = game.time.now + 20;
+
+                    //console.log(_targetRange.x,  _targetRange.y);
+
+                }
 
             }
-            _player.bulletTime = game.time.now + 5;
-        }
 
+        }
+       
     }
 }
 

@@ -1,0 +1,52 @@
+{"frames": {
+
+"p1.png":
+{
+	"frame": {"x":182,"y":2,"w":73,"h":56},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":73,"h":56},
+	"sourceSize": {"w":73,"h":56}
+},
+"p2.png":
+{
+	"frame": {"x":2,"y":2,"w":88,"h":56},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":88,"h":56},
+	"sourceSize": {"w":88,"h":56}
+},
+"p3.png":
+{
+	"frame": {"x":332,"y":2,"w":90,"h":55},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":90,"h":55},
+	"sourceSize": {"w":90,"h":55}
+},
+"p4.png":
+{
+	"frame": {"x":92,"y":2,"w":88,"h":56},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":88,"h":56},
+	"sourceSize": {"w":88,"h":56}
+},
+"p5.png":
+{
+	"frame": {"x":257,"y":2,"w":73,"h":56},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":73,"h":56},
+	"sourceSize": {"w":73,"h":56}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "fighter.png",
+	"format": "RGBA8888",
+	"size": {"w":424,"h":60},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:a58ea7cc4430203cb0e822716c22f7c7:b93d023dd9c594954c5e62e2430a52a9:1a5a8c525302a39622fd93c490d8bc51$"
+}
+}
