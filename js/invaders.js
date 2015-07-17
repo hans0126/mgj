@@ -57,94 +57,18 @@ function create() {
 
     //  Our bullet group
     bullets = game.add.group();
-    bullets.enableBody = true;
-    bullets.physicsBodyType = Phaser.Physics.ARCADE;
-    bullets.createMultiple(300, 'bullet');
-    bullets.setAll('anchor.x', 0.5);
-    bullets.setAll('anchor.y', 1);
-    bullets.setAll('pivot.x', 0.5);
-    bullets.setAll('pivot.y', 0.5);
-
-
-    bullets.setAll('outOfBoundsKill', true);
-    bullets.setAll('checkWorldBounds', true);
+    createBullet.call(bullets, 300);
 
     // The enemy's bullets
     enemyBullets = game.add.group();
-    enemyBullets.enableBody = true;
-    enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
-    enemyBullets.createMultiple(130, 'enemyBullet');
-    enemyBullets.setAll('anchor.x', 0.5);
-    enemyBullets.setAll('anchor.y', 1);
-    enemyBullets.setAll('outOfBoundsKill', true);
-    enemyBullets.setAll('checkWorldBounds', true);
+    createEnemyBullet.call(bullets, 20);
 
     //  The hero!
-
     players = game.add.group();
-    /*
-    for (var i = 0; i < 2; i++) {
-        var playerss = game.add.sprite(400 + i * 40, 500, 'ship');
-        playerss.anchor.setTo(0.5, 0.5);
-        game.physics.enable(playerss, Phaser.Physics.ARCADE);
-        players.push(playerss);
-    }
-    */
 
-    hero = players.create(400, 500, 'fighter', 'p3.png');
-    hero.anchor.setTo(0.5, 0.5);
-    game.physics.enable(hero, Phaser.Physics.ARCADE);
-    hero.vx = 0;
-    hero.vy = 0;
-    hero.life = 2;
-    hero.bulletTime = 0;
-    hero.movement = false;
+    hero = createPlayer();
 
-    hero.animations.add('left', [
-        'p2.png',
-        'p1.png'
-    ], 10, false, false);
-
-    hero.animations.add('left-center', [
-        'p2.png',
-        'p3.png'
-    ], 10, false, false);
-
-    hero.animations.add('right', [
-        'p4.png',
-        'p5.png'
-    ], 10, false, false);
-
-    hero.animations.add('right-center', [
-        'p4.png',
-        'p3.png'
-    ], 10, false, false);
-
-
-    for (var i = 0; i < 2; i++) {
-        attackRange = game.add.graphics(0, 0);
-        attackRange.clear();
-        //attackRange.lineStyle(1, 0xffffff);
-        attackRange.beginFill(0xa000f3, 0.2);
-        attackRange.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
-        // attackRange.drawRect(-10, -100, 20, 100);
-        //   attackRange.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
-        attackRange.endFill();
-
-        attackRange.bulletTime = 0;
-        hero.addChild(attackRange);
-        attackRange.y = -10;
-
-        if (i == 0) {
-            attackRange.x = hero.width / 2;
-        } else {
-            attackRange.x = hero.width / -2;
-        }
-
-    }
-
-
-
+    createBulletEmiter.call(hero);
 
     game.input.mouse.onMouseMove = function(pointer, x, y) {
         // pointer returns the active pointer, x and y return the position on the canvas
@@ -245,15 +169,9 @@ function create() {
     })
 
     socket.on('disconnect', function(msg) {
-
         //playerList[msg].kill();
         players.removeChild(playerList[msg]);
     })
-
-
-
-
-
 
 }
 
@@ -341,7 +259,7 @@ function update() {
     } else if (cursors.down.isDown) {
         // attackRange.rotation += 0.1;
 
-        if (de > 10) {
+        if (de > 6) {
             de -= 1;
         }
     }
@@ -379,18 +297,20 @@ function update() {
         fireBullet(players.children[0]);
 
     }
+    /*
+        for (var i = 0; i < hero.children.length; i++) {
+            var _attackRange = hero.children[i];
+            _attackRange.clear();
+            //attackRange.lineStyle(1, 0xffffff);
+            _attackRange.beginFill(0xa000f3, 0.2);
+            _attackRange.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
+            // attackRange.drawRect(-10, -100, 20, 100);
+            //   attackRange.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
+            _attackRange.endFill();
+            _attackRange.rotation = game.math.degToRad(angle) + game.math.degToRad(Math.abs(90 - (de / 2))) * -1;
+        }*/
 
-    for (var i = 0; i < hero.children.length; i++) {
-        var _attackRange = hero.children[i];
-        _attackRange.clear();
-        //attackRange.lineStyle(1, 0xffffff);
-        _attackRange.beginFill(0xa000f3, 0.2);
-        _attackRange.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
-        // attackRange.drawRect(-10, -100, 20, 100);
-        //   attackRange.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
-        _attackRange.endFill();
-        _attackRange.rotation = game.math.degToRad(angle) + game.math.degToRad(Math.abs(90 - (de / 2))) * -1;
-    }
+    bulletEmiterUpdate.call(hero);
 
     //attackRange.endAngle += 0.1;
     // result = attackRange.rotation + "/" + Math.PI;
@@ -517,14 +437,16 @@ function fireBullet(_player) {
 
     if (_player.alive) {
 
-        for (var i = 0; i < _player.children.length; i++) {
+        for (var i = 0; i < _player.children[0].children.length; i++) {
 
-            var _targetRange = _player.children[i];
+            var _targetRange = _player.children[0].children[i];
 
 
             if (game.time.now > _targetRange.bulletTime) {
 
                 var bullet = bullets.getFirstExists(false);
+
+
                 if (bullet) {
 
                     var _emitX = _player.x + _targetRange.x;
@@ -549,7 +471,7 @@ function fireBullet(_player) {
             }
 
         }
-       
+
     }
 }
 
@@ -559,7 +481,101 @@ function resetBullet(bullet) {
 
 }
 
+function createBullet(_bulletCount) {
+    this.enableBody = true;
+    this.physicsBodyType = Phaser.Physics.ARCADE;
+    this.createMultiple(_bulletCount, 'bullet');
+    this.setAll('anchor.x', 0.5);
+    this.setAll('anchor.y', 1);
+    this.setAll('pivot.x', 0.5);
+    this.setAll('pivot.y', 0.5);
 
+    this.setAll('outOfBoundsKill', true);
+    this.setAll('checkWorldBounds', true);
+}
+
+function createEnemyBullet(_bulletCount) {
+    this.enableBody = true;
+    this.physicsBodyType = Phaser.Physics.ARCADE;
+    this.createMultiple(_bulletCount, 'enemyBullet');
+    this.setAll('anchor.x', 0.5);
+    this.setAll('anchor.y', 1);
+    this.setAll('outOfBoundsKill', true);
+    this.setAll('checkWorldBounds', true);
+}
+
+function createPlayer() {
+
+    _hero = players.create(400, 500, 'fighter', 'p3.png');
+    _hero.anchor.setTo(0.5, 0.5);
+    game.physics.enable(_hero, Phaser.Physics.ARCADE);
+    _hero.vx = 0;
+    _hero.vy = 0;
+    _hero.life = 2;
+    _hero.bulletTime = 0;
+    _hero.movement = false;
+
+    _hero.animations.add('left', [
+        'p2.png',
+        'p1.png'
+    ], 10, false, false);
+
+    _hero.animations.add('left-center', [
+        'p2.png',
+        'p3.png'
+    ], 10, false, false);
+
+    _hero.animations.add('right', [
+        'p4.png',
+        'p5.png'
+    ], 10, false, false);
+
+    _hero.animations.add('right-center', [
+        'p4.png',
+        'p3.png'
+    ], 10, false, false);
+
+    return _hero;
+
+}
+
+function createBulletEmiter() {
+
+    var _emit = game.add.group();
+
+    for (var i = 0; i < 2; i++) {
+        var attackRange = game.add.graphics(0, 0);
+        attackRange.bulletTime = 0;
+        _emit.addChild(attackRange);
+        attackRange.y = -10;
+        if (i == 0) {
+            attackRange.x = hero.width / 2;
+        } else {
+            attackRange.x = hero.width / -2;
+        }
+    }
+
+    this.addChild(_emit);
+
+    //console.log(this.children);
+}
+
+
+function bulletEmiterUpdate() {
+
+    for (var i = 0; i < this.children[0].children.length; i++) {
+        var _attackRange = this.children[0].children[i];
+        _attackRange.clear();
+        //attackRange.lineStyle(1, 0xffffff);
+        _attackRange.beginFill(0xa000f3, 0.2);
+        _attackRange.arc(0, 0, 160, 0, game.math.degToRad(de) * -1, 1);
+        // attackRange.drawRect(-10, -100, 20, 100);
+        //   attackRange.rotation =game.math.degToRad(Math.abs(90-(de/2)))*-1;
+        _attackRange.endFill();
+        _attackRange.rotation = game.math.degToRad(angle) + game.math.degToRad(Math.abs(90 - (de / 2))) * -1;
+    }
+
+}
 
 
 function restart() {

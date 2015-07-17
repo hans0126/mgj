@@ -20,6 +20,8 @@
     var socket = io.connect();
     var score;
 
+    var joystick;
+
     function joinGame() {
         currentId = Math.floor(Math.random() * 1000) + "_" + Math.floor(Math.random() * 1000);
         window.localStorage['id'] = currentId;
@@ -28,7 +30,7 @@
         });
 
         $(this).hide();
-        launchIntoFullscreen(document.documentElement);
+        // launchIntoFullscreen(document.documentElement);
         init();
 
     };
@@ -52,8 +54,8 @@
 
         function create() {
 
-            game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
-            game.scale.startFullScreen(true);
+            //  game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            // game.scale.startFullScreen(true);
             var joystick = game.add.group();
             joystick.x = 200;
             joystick.y = game.world.centerY;
@@ -74,9 +76,9 @@
             /* aa.animations.add('walk', ['joystick.png', 'joystick_base.png'], 10, true, false);
              aa.animations.play('walk');*/
             stick.inputEnabled = true;
-            stick.input.enableDrag(true);
-            stick.events.onDragStart.add(onDragStart, this);
-            stick.events.onDragStop.add(onDragStop, this);
+            /* stick.input.enableDrag(true);
+             stick.events.onDragStart.add(onDragStart, this);
+             stick.events.onDragStop.add(onDragStop, this);*/
 
             var button = game.add.button(600, game.world.centerY, 'joystick', actionOnClick, 'joystick.png');
 
@@ -108,6 +110,21 @@
             game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
             game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 
+            // game.input.mouse.onMouseDown = function(pointer, x, y){
+            /*  joystick.x =  pointer.x;
+              joystick.y =  pointer.y;*/
+            //}
+            joystick.drag = false;
+            game.input.onDown.add(function(pointer) {
+
+                joystick.x = pointer.x;
+                joystick.y = pointer.y;
+
+                // console.log(game.input.activePointer.isDown);
+                joystick.drag = true;
+                joystick.data = pointer;
+
+            });
 
         }
 
@@ -139,7 +156,12 @@
 
         onEnterEvent = function() {
 
-            if (stick.game.input.activePointer.isDown) {
+            if (game.input.activePointer.isDown) {
+
+                  stick.x = stick.parent.data.x - stick.parent.x;
+                  stick.y = stick.parent.data.y - stick.parent.y;
+               /* stick.body.velocity.x = stick.parent.data.x - stick.parent.x;
+                stick.body.velocity.y = stick.parent.data.y - stick.parent.y;*/
                 var _returnPostion = {
                     x: 0,
                     y: 0
@@ -181,7 +203,10 @@
             //result ="x:"+aa.x+",y:"+aa.y;
             game.debug.text(result, 10, 20);
             //
+            //if (joystick.drag) {
             onEnterEvent();
+            //  console.log(stick.parent.data);
+            //}
         }
 
 
