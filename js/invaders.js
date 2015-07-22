@@ -67,7 +67,10 @@ function create() {
     players = game.add.group();
 
     hero = createPlayer();
-
+    hero.action = null;
+    hero.fireX = null;
+    hero.fireY = null;
+    hero.fire = false;
     createBulletEmiter.call(hero);
 
     game.input.mouse.onMouseMove = function(pointer, x, y) {
@@ -144,6 +147,7 @@ function create() {
 
     socket.on('addNewPlayer', function(msg) {
 
+        /*
         var hero = players.create(400, 500, 'ship');
         hero.anchor.setTo(0.5, 0.5);
         game.physics.enable(hero, Phaser.Physics.ARCADE);
@@ -154,16 +158,51 @@ function create() {
         hero.id = msg;
         hero.score = 0;
         playerList[msg] = hero;
+        */
 
         socket.on('update sprite', function(msg) {
-            playerList[msg.id].vx = msg.x;
-            playerList[msg.id].vy = msg.y;
+            /*  playerList[msg.id].vx = msg.x;
+              playerList[msg.id].vy = msg.y;*/
+
+            if (msg.id == "p1") {
+                if (msg.x < 0) {
+                    hero.action = "left";
+                } else if (msg.x > 0) {
+                    hero.action = "right";
+                } else {
+                    hero.action = null;
+                }
+            } else if (msg.id == "p2") {
+                //hero.fire = msg.fire;
+
+                if (msg.x < 0) {
+                    hero.fireX = "left";
+                } else if (msg.x > 0) {
+                    hero.fireX = "right";
+                } else {
+                    hero.fireX = null;
+                }
+
+
+                if (msg.y < 0) {
+                    hero.fireY = "up";
+                } else if (msg.y > 0) {
+                    hero.fireY = "bottom";
+                } else {
+                    hero.fireY = null;
+                }
+            }
 
         });
 
-        socket.on('shooting', function(msg) {
-            fireBullet(playerList[msg]);
-        });
+
+        socket.on('fire', function(msg) {
+            hero.fire = msg.fire;
+        })
+
+        /* socket.on('shooting', function(msg) {
+             fireBullet(playerList[msg]);
+         });*/
 
 
     })
@@ -243,20 +282,20 @@ function update() {
     }
 
 
-    if (cursors.left.isDown) {
+    if (cursors.left.isDown || hero.fireX =="left") {
         // attackRange.rotation -= 0.1;
         angle -= 1;
-    } else if (cursors.right.isDown) {
+    } else if (cursors.right.isDown || hero.fireX =="right") {
         // attackRange.rotation += 0.1;
         angle += 1;
     }
 
-    if (cursors.up.isDown) {
+    if (cursors.up.isDown || hero.fireY =="up") {
         // attackRange.rotation -= 0.1;
         if (de < 180) {
             de += 1;
         }
-    } else if (cursors.down.isDown) {
+    } else if (cursors.down.isDown || hero.fireY =="bottom") {
         // attackRange.rotation += 0.1;
 
         if (de > 6) {
@@ -266,7 +305,7 @@ function update() {
 
     hero.body.velocity.x = 0;
 
-    if (moveLeft.isDown) {
+    if (moveLeft.isDown || hero.action == 'left') {
         if (hero.movement != 'left') {
             hero.animations.play('left');
             hero.movement = 'left';
@@ -274,7 +313,7 @@ function update() {
 
         hero.body.velocity.x = -150;
 
-    } else if (moveRight.isDown) {
+    } else if (moveRight.isDown || hero.action == 'right') {
         if (hero.movement != 'right') {
             hero.animations.play('right');
             hero.movement = 'right';
@@ -293,7 +332,7 @@ function update() {
 
 
 
-    if (fireButton.isDown) {
+    if (fireButton.isDown || hero.fire) {
         fireBullet(players.children[0]);
 
     }

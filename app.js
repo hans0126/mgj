@@ -45,13 +45,14 @@ io.on('connection', function(socket) {
     })
 
     socket.on('update', function(msg) {
-        io.emit('update sprite', msg);
-        
+        io.emit('update sprite', msg);      
     })
 
-    socket.on('shooting', function(msg) {
+   
 
-        io.emit('shooting', msg);
+    socket.on('fire', function(msg) {
+        console.log(msg);
+        io.emit('fire', msg);
     })
 
     socket.on('get score', function(msg) {

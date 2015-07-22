@@ -23,7 +23,8 @@
     var joystick,
         stick,
         joystick2,
-        stick2;
+        stick2,
+        fire = false;
     var touchs = [];
 
     function joinGame() {
@@ -67,7 +68,7 @@
             stick = joystick.stick;
             joystick = joystick.joystick;
             joystick.x = game.world.centerX / 3;
-
+            joystick.key = "p1";
 
 
 
@@ -76,7 +77,7 @@
             stick2 = joystick2.stick;
             joystick2 = joystick2.joystick;
             joystick2.x = game.world.centerX * 2 - game.world.centerX / 2;
-
+            joystick2.key = "p2";
             //  aa.frameName  = '';
             /* aa.animations.add('walk', ['joystick.png', 'joystick_base.png'], 10, true, false);
              aa.animations.play('walk');*/
@@ -124,7 +125,7 @@
 
                 if (pointer.x < game.world.centerX) {
                     joystick.x = pointer.x;
-                    joystick.y = pointer.y;                   
+                    joystick.y = pointer.y;
                     joystick.data = pointer;
 
                     touchs.push({
@@ -136,7 +137,7 @@
                 if (pointer.x > game.world.centerX) {
 
                     joystick2.x = pointer.x;
-                    joystick2.y = pointer.y;                    
+                    joystick2.y = pointer.y;
                     joystick2.data = pointer;
 
                     touchs.push({
@@ -159,57 +160,61 @@
         }
 
         socket.on('get score', function(msg) {
-            if (msg.id == currentId) {
-                score.text = "score:" + msg.score;
-            }
-        })
+                if (msg.id == currentId) {
+                    score.text = "score:" + msg.score;
+                }
+            })
+            /*
+                    function onDragStart(sprite, pointer) {
+                        //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
+                    }
 
-        function onDragStart(sprite, pointer) {
-            //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
-        }
-
-        function onDragStop(sprite, pointer) {
-            //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
-            sprite.x = 0;
-            sprite.y = 0;
-            stick.lastMove = {
-                x: 0,
-                y: 0
-            };
-            socketEmit(0, 0);
-        }
-
+                    function onDragStop(sprite, pointer) {
+                        //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
+                        sprite.x = 0;
+                        sprite.y = 0;
+                        stick.lastMove = {
+                            x: 0,
+                            y: 0
+                        };
+                        socketEmit(0, 0);
+                    }
+            */
         onEnterEvent = function() {
 
-            /*  if (game.input.pointer2.isDown && joystick2.drag == true) {
-                  moveJoystick(stick2);
-              } else {
-                  stick2.x = 0;
-                  stick2.y = 0;
-                  joystick2.drag = false;
-              }
-
-
-              if ((game.input.activePointer.isDown || game.input.pointer1.isDown) && joystick.drag == true) {
-                  moveJoystick(stick);
-              } else {
-                  stick.x = 0;
-                  stick.y = 0;
-                  joystick.drag = false;
-              }*/
 
 
             for (var i = 0; i < touchs.length; i++) {
-                if(touchs[i].touch.isDown){
-                     moveJoystick(touchs[i].target);
+                if (touchs[i].touch.isDown) {
+                    moveJoystick(touchs[i].target);
+
+                    if (touchs[i].target.parent.key == "p2") {
+
+                        if (!fire) {
+                            fire = true;
+                            socket.emit('fire', {
+                                fire: true
+                            });
+                        }
+                    }
+
                 }
 
-                 if(touchs[i].touch.isUp){                   
+                if (touchs[i].touch.isUp) {
+                    socketEmit(touchs[i].target.parent.key, 0, 0);
                     touchs[i].target.parent.data = '';
                     touchs[i].target.x = 0;
                     touchs[i].target.y = 0;
-                    touchs.splice(i,1);
-                 }  
+
+                    if (touchs[i].target.parent.key == "p2") {
+                        fire = false;
+                        socket.emit('fire', {
+                            fire: false
+                        });
+                    }
+
+                    touchs.splice(i, 1);
+                }
             }
         }
 
@@ -249,15 +254,15 @@
                 }
             }
 
-            if (_stick.lastMove != _returnPostion) {
-                socketEmit(_returnPostion.x, _returnPostion.y);
-               // result = "x:" + _returnPostion.x + ",y:" + _returnPostion.y;
+            if (_stick.lastMove.x != _returnPostion.x || _stick.lastMove.y != _returnPostion.y) {
+                socketEmit(_stick.parent.key, _returnPostion.x, _returnPostion.y, true);
             }
 
             _stick.lastMove = {
                 x: _returnPostion.x,
                 y: _returnPostion.y
             };
+
 
 
         }
@@ -274,12 +279,12 @@
         }
 
 
-        function socketEmit(_x, _y) {
-
+        function socketEmit(_key, _x, _y) {
+           
             socket.emit('update', {
                 x: _x,
-                y: _y,
-                id: currentId
+                y: _y,            
+                id: _key                
             });
         }
 
