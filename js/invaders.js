@@ -24,11 +24,12 @@ var players;
 var playerList = [];
 var aliens;
 var bullets;
-var bulletTime = 0;
+//
 var cursors;
 var fireButton;
 var moveLeft;
 var moveRight;
+//
 var explosions;
 var starfield;
 var score = 0;
@@ -85,8 +86,8 @@ function create() {
     game.input.mouse.onMouseDown = function(pointer, x, y) {
         // result = "A";
         // result= attackRange.rotation;
-        var _x = pointer.x - hero.x;
-        var _y = pointer.y - hero.y;
+       var _x = pointer.x - hero.x;
+       var _y = pointer.y - hero.y;
 
         fireBullet(hero, _x, _y);
 
@@ -94,7 +95,7 @@ function create() {
         //  attackRange.arc(0, 0, 160, 0, game.math.degToRad(90) * -1, 1);
         //attackRange.endFill();
 
-        de++;
+     //   de++;
     }
 
     //  The baddies!
