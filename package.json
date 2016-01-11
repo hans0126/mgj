@@ -1,0 +1,25 @@
+{
+  "name": "mgj",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.13.0",
+    "socket.io": "^1.3.5",
+    "ejs": "^2.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hans0126/mgj.git"
+  },
+  "author": "Hans",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hans0126/mgj/issues"
+  },
+  "homepage": "https://github.com/hans0126/mgj#readme"
+}

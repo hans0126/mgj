@@ -3,18 +3,335 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Document</title>
-    <script data-main="js/joystick" src="js/lib/require.js"></script>
+    <title>test</title>
     <link rel="stylesheet" href="css/joystick.css">
 </head>
 
 <body>
-    <div id="gameView"></div>
     <div>
         <a href="#" id="joinBtn">JOIN</a>
     </div>
+    <script src="js/lib/phaser.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script>
+    $('#joinBtn').on('click', joinGame);
+    var currentId;
+    var socket = io.connect();
+    var score;
 
-    
+    var joystick,
+        stick,
+        joystick2,
+        stick2,
+        fire = false;
+    var touchs = [];
+
+    function joinGame() {
+        currentId = Math.floor(Math.random() * 1000) + "_" + Math.floor(Math.random() * 1000);
+        window.localStorage['id'] = currentId;
+        socket.emit('register', {
+            id: currentId
+        });
+
+        $(this).hide();
+        // launchIntoFullscreen(document.documentElement);
+        init();
+
+    };
+
+
+    function init() {
+        var game = new Phaser.Game('100%', '100%', Phaser.AUTO, '', {
+            preload: preload,
+            create: create,
+            update: update
+        });
+
+        var result = 'Drag a sprite';
+        var stick;
+        var onEnterEvent;
+
+        function preload() {
+            game.load.atlasJSONHash('joystick', 'images/joystick_phaser.png', 'images/joystick_phaser.json');
+
+        }
+
+        function create() {
+
+            //  game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            // game.scale.startFullScreen(true);
+
+
+            joystick = createJoystick();
+
+            stick = joystick.stick;
+            joystick = joystick.joystick;
+            joystick.x = game.world.centerX / 3;
+            joystick.key = "p1";
+
+
+
+            joystick2 = createJoystick();
+
+            stick2 = joystick2.stick;
+            joystick2 = joystick2.joystick;
+            joystick2.x = game.world.centerX * 2 - game.world.centerX / 2;
+            joystick2.key = "p2";
+            //  aa.frameName  = '';
+            /* aa.animations.add('walk', ['joystick.png', 'joystick_base.png'], 10, true, false);
+             aa.animations.play('walk');*/
+            //  stick.inputEnabled = true;
+            /* stick.input.enableDrag(true);
+             stick.events.onDragStart.add(onDragStart, this);
+             stick.events.onDragStop.add(onDragStop, this);*/
+
+            /*   var button = game.add.button(600, game.world.centerY, 'joystick', actionOnClick, 'joystick.png');
+
+               button.anchor.set(0.5);*/
+            //  button.events.onInputOver.add(isTouchingButton,this);
+            //   button.input.enableDrag(true);
+            /*  var btn = game.add.sprite(0, 0, 'joystick', 'joystick.png');
+              btn.anchor.set(0.5);
+
+              btn.x = 600;
+              btn.y = 200;*/
+
+            //game.input.onDown.add(btnClick, this);
+            //console.log(aa);
+
+            //  stick.input.boundsRect = new Phaser.Rectangle(300 / -2, 300 / -2, 300, 300);
+
+
+            var style = {
+                font: "65px Arial",
+                fill: "#ffffff",
+                align: "center"
+            };
+
+            score = game.add.text(game.world.centerX, 50, "score:0", style);
+
+            score.anchor.set(0.5);
+
+            game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+            game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+
+            // game.input.mouse.onMouseDown = function(pointer, x, y){
+            /*  joystick.x =  pointer.x;
+              joystick.y =  pointer.y;*/
+            //}
+            joystick.drag = false;
+            game.input.onDown.add(function(pointer) {
+
+                if (pointer.x < game.world.centerX) {
+                    joystick.x = pointer.x;
+                    joystick.y = pointer.y;
+                    joystick.data = pointer;
+
+                    touchs.push({
+                        target: stick,
+                        touch: pointer
+                    })
+                }
+
+                if (pointer.x > game.world.centerX) {
+
+                    joystick2.x = pointer.x;
+                    joystick2.y = pointer.y;
+                    joystick2.data = pointer;
+
+                    touchs.push({
+                        target: stick2,
+                        touch: pointer
+                    })
+                }
+
+            });
+
+
+
+            /*game.input.addPointer();
+            game.input.addPointer();*/
+        }
+
+        function actionOnClick(pointer) {
+            socket.emit('shooting', currentId);
+
+        }
+
+        socket.on('get score', function(msg) {
+                if (msg.id == currentId) {
+                    score.text = "score:" + msg.score;
+                }
+            })
+            /*
+                    function onDragStart(sprite, pointer) {
+                        //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
+                    }
+
+                    function onDragStop(sprite, pointer) {
+                        //result = sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y;
+                        sprite.x = 0;
+                        sprite.y = 0;
+                        stick.lastMove = {
+                            x: 0,
+                            y: 0
+                        };
+                        socketEmit(0, 0);
+                    }
+            */
+        onEnterEvent = function() {
+
+
+
+            for (var i = 0; i < touchs.length; i++) {
+                if (touchs[i].touch.isDown) {
+                    moveJoystick(touchs[i].target);
+
+                    if (touchs[i].target.parent.key == "p2") {
+
+                        if (!fire) {
+                            fire = true;
+                            socket.emit('fire', {
+                                fire: true
+                            });
+                        }
+                    }
+
+                }
+
+                if (touchs[i].touch.isUp) {
+                    socketEmit(touchs[i].target.parent.key, 0, 0);
+                    touchs[i].target.parent.data = '';
+                    touchs[i].target.x = 0;
+                    touchs[i].target.y = 0;
+
+                    if (touchs[i].target.parent.key == "p2") {
+                        fire = false;
+                        socket.emit('fire', {
+                            fire: false
+                        });
+                    }
+
+                    touchs.splice(i, 1);
+                }
+            }
+        }
+
+        function moveJoystick(_stick) {
+
+            var _mvRangeX = _stick.parent.data.x - _stick.parent.x;
+            var _mvRangeY = _stick.parent.data.y - _stick.parent.y;
+
+
+            if (_stick.parent.data.x - _stick.parent.x < 100 && _stick.parent.data.x - _stick.parent.x > -100) {
+                _stick.x = _mvRangeX;
+            }
+
+            if (_stick.parent.data.y - _stick.parent.y < 100 && _stick.parent.data.y - _stick.parent.y > -100) {
+                _stick.y = _mvRangeY;
+            }
+
+            var _returnPostion = {
+                x: 0,
+                y: 0
+            };
+
+            //result = "x:" + stick.x + ",y:" + stick.y;
+            if (Math.abs(_stick.x) > 30) {
+                if (_stick.x > 0) {
+                    _returnPostion.x = 200;
+                } else {
+                    _returnPostion.x = -200;
+                }
+            }
+
+            if (Math.abs(_stick.y) > 30) {
+                if (_stick.y > 0) {
+                    _returnPostion.y = 200;
+                } else {
+                    _returnPostion.y = -200;
+                }
+            }
+
+            if (_stick.lastMove.x != _returnPostion.x || _stick.lastMove.y != _returnPostion.y) {
+                socketEmit(_stick.parent.key, _returnPostion.x, _returnPostion.y, true);
+            }
+
+            _stick.lastMove = {
+                x: _returnPostion.x,
+                y: _returnPostion.y
+            };
+
+
+
+        }
+
+
+        function update() {
+            //result ="x:"+aa.x+",y:"+aa.y;
+            game.debug.text(result, 10, 20);
+            //
+            //if (joystick.drag) {
+            onEnterEvent();
+            //  console.log(stick.parent.data);
+            //}
+        }
+
+
+        function socketEmit(_key, _x, _y) {
+           
+            socket.emit('update', {
+                x: _x,
+                y: _y,            
+                id: _key                
+            });
+        }
+
+
+        function createJoystick() {
+
+            var _joystick = game.add.group();
+            // _joystick.x = 200;
+            _joystick.y = game.world.centerY;
+            var _joystickBg = game.add.sprite(0, 0, 'joystick', 'joystick_base.png');
+            _joystickBg.anchor.set(0.5);
+
+            //game.add.sprite(0,0,'bunny');
+            var _stick = game.add.sprite(0, 0, 'joystick', 'joystick.png');
+            _stick.anchor.set(0.5);
+            _stick.lastMove = {
+                x: 0,
+                y: 0
+            };
+
+            _joystick.add(_joystickBg);
+            _joystick.add(_stick);
+
+            return {
+                joystick: _joystick,
+                stick: _stick
+            };
+
+
+        }
+
+    }
+
+
+    function launchIntoFullscreen(element) {
+
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+        }
+    }
+    </script>
 </body>
 
 </html>
